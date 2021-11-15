@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<!--    <item-->
+<!--        android:id="@+id/action_search"-->
+<!--        android:icon="@android:drawable/ic_menu_search"-->
+<!--        app:showAsAction="always|never|withText"-->
+<!--        app:actionViewClass="androidx.appcompat.widget.SearchView"-->
+<!--        android:title="Search"/>-->
+
+        <item
+            android:id="@+id/iCart"
+            android:actionLayout="@layout/cart_menu_item"
+            android:icon="@drawable/shopping_cart"
+            app:showAsAction="always"
+            android:title="Корзина">
+        </item>
+
+        <item
+            android:id="@+id/btChoseClient"
+            app:showAsAction="collapseActionView"
+            android:tooltipText="Выбор клиента"
+            android:title="Выбор клиента"
+            />
+
+        <item
+            android:id="@+id/btClearClient"
+            app:showAsAction="collapseActionView"
+            android:tooltipText="Очистка клиента"
+            android:title="Очистить клиента"
+            />
+
+        <item
+            android:id="@+id/btShowPrice"
+            app:showAsAction="collapseActionView"
+            android:tooltipText="Видимость цены клиента"
+            android:title="Показать цену"
+            />
+
+
+
+
+</menu>

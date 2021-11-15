@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Grandinstrument</string>
+    <string name="maintenance_phone">Need help ?  0800 12345678</string>
+    <string name="title_activity_login">Grand Instrument (login)</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="server_header">Сервер</string>
+
+    <!-- Messages Preferences -->
+    <string name="server_title">Сервер</string>
+    <string name="default_server">https://web1c-x64.grandinstrument.com:41443/GrandInstrument-UT-restored</string>
+    <string name="api_key">na^pr-M8J50;Ikg*7+0LH37M*Vg^j-A7</string>
+    <string name="customer_code_1c">000024878</string>
+    <string name="app_label">поиск</string>
+    <string name="search_hint">поиск</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="adress_get_client_by_code">/hs/GetCatalog/v1/get_client_by_code</string>
+
+</resources>
