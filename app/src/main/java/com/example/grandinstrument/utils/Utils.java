@@ -16,9 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.RemoteException;
-import android.provider.ContactsContract;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,6 +33,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.example.grandinstrument.MainActivity;
+import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.R;
 import com.example.grandinstrument.data_base_adapter.DataBaseHandler;
 import com.example.grandinstrument.data_base_model.Client;
@@ -48,7 +47,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -379,16 +377,38 @@ public class Utils implements SharedPreferences.OnSharedPreferenceChangeListener
         return request;
     }
 
-    private static JSONObject getObjectPrice(String guid, String article, int qty) throws JSONException {
+    public static JSONObject getJSONObject(ArrayList< HashMap<String,String>> data) throws JSONException {
         JSONObject obj = new JSONObject();
         JSONObject items = new JSONObject();
+
+        JSONArray ja = new JSONArray();
+        for (int i = 0; i<data.size(); i++){
+            HashMap<String,String> hashMap = data.get(i);
+
+            JSONObject item = new JSONObject();
+            for (Map.Entry<String, String> entry : hashMap.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                item.put(key, value);
+            }
+
+            ja.put(item);
+        }
+
+        obj.put("items", ja);
+        obj.put("Product_Row_Quantity", data.size());
+
+        return obj;
+    }
+
+    private static JSONObject getObjectPrice(String guid, String article, int qty) throws JSONException {
+        JSONObject obj = new JSONObject();
+        JSONArray items = new JSONArray();
         JSONObject item = new JSONObject();
         item.put("guid", guid);
         item.put("article", article);
         item.put("qty", 1);
 
-
-        items.put("item", item);
         obj.put("items", items);
         obj.put("Product_Row_Quantity", 1);
 
@@ -878,8 +898,8 @@ public class Utils implements SharedPreferences.OnSharedPreferenceChangeListener
 
     }
 
-    public static void showAlert(String title, String message, String positive) {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(Utils.mainContext);
+    public static void showAlert(Context context, String title, String message, String positive) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
         builder.setTitle(title);
         builder.setMessage(message);
         builder.setCancelable(true);

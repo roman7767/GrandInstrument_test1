@@ -12,8 +12,11 @@ public class Client {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+
         if (o == null || getClass() != o.getClass()) return false;
         Client client = (Client) o;
+        if (guid_1c==null && client.guid_1c == null) return true;
+        if (guid_1c==null) return false;
         return guid_1c.equals(client.guid_1c);
     }
 
