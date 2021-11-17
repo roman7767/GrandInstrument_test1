@@ -1,5 +1,6 @@
 package com.example.grandinstrument;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
 
@@ -7,8 +8,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
-public class SettingsActivity extends AppCompatActivity {
+import com.example.grandinstrument.utils.Utils;
+
+public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +30,25 @@ public class SettingsActivity extends AppCompatActivity {
                     .replace(R.id.settings, new SettingsFragment())
                     .commit();
         }
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.OnSharedPreferenceChangeListener listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                if (key == "server") {
+                    Utils.mainServer = prefs.getString("server", String.valueOf(R.string.default_server));
+                }
+
+                if (key == "allow_load_from_url") {
+                    Utils.allow_load_from_url = prefs.getBoolean("allow_load_from_url", false);
+                }
+
+                if (key == "showPrice") {
+                    Utils.showPrice = prefs.getBoolean("showPrice", false);
+                }
+            }
+        };
+
+        prefs.registerOnSharedPreferenceChangeListener(listener);
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
@@ -46,5 +69,14 @@ public class SettingsActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
     
 }

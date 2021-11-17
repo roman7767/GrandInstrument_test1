@@ -231,6 +231,7 @@
                     app:layout_constraintStart_toStartOf="parent">
 
                     <Button
+                        android:visibility="gone"
                         android:id="@+id/bt_save"
                         android:layout_margin="2dp"
                         android:text="Сохранить"

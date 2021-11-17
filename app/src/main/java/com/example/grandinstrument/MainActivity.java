@@ -34,6 +34,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,7 +61,7 @@ import java.util.ArrayList;
 
 import static android.widget.Toast.makeText;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     private ViewPager viewPager;
     private ImageView ivCollapseBar;
@@ -70,7 +71,9 @@ public class MainActivity extends AppCompatActivity {
     private MenuItem itemMenuShowPrice;
     private ConstraintLayout leftSideBar;
     private TextView tvCartQty;
-
+    private ImageView iv_ClientBar;
+    private TextView tv_NameClient;
+    private LinearLayout ll_show_client;
     String titleActivity;
 
     @Override
@@ -200,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+
         if (Utils.curUser == null){
             startActivity(Utils.loginIntent );
         }
@@ -282,12 +286,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setTitleActivity(){
+        titleActivity = "Grandinstrument";
         if (Utils.curClient == null || Utils.curClient.getName().isEmpty()){
             titleActivity = "Grandinstrument";
         }else{
-            titleActivity = "Grandinstrument" + "  "+"Клиент: "+Utils.curClient.getName();
-        }
+            //titleActivity = "Grandinstrument" + "  "+"Клиент: "+Utils.curClient.getName();
 
+        }
+        setVisibleClientInToolBar();
         setTitle(titleActivity);
 
     }
@@ -296,6 +302,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this,SettingsActivity.class);
         startActivity(intent);
     }
+
+
 
     private static class MyAdapter extends FragmentPagerAdapter {
 
@@ -374,6 +382,18 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        MenuItem itemClient= menu.findItem(R.id.iClient);
+        MenuItemCompat.setActionView(itemClient, R.layout.show_client_menu_item);
+        ll_show_client = (LinearLayout)   MenuItemCompat.getActionView(itemClient);
+        tv_NameClient = (TextView) ll_show_client.findViewById(R.id.tv_NameClient);
+        iv_ClientBar = (ImageView) ll_show_client.findViewById(R.id.iv_ClientBar);
+        iv_ClientBar.setImageResource(0);
+        tv_NameClient.setText("");
+
+        setVisibleClientInToolBar();
+
+
         if (Utils.mCurCartQty != null){
             Utils.mCurCartQty.setValue(Utils.getQtyInCart());
         }
@@ -382,6 +402,21 @@ public class MainActivity extends AppCompatActivity {
             tvCartQty.setVisibility(View.GONE);
         }
         return true;
+    }
+
+    private void setVisibleClientInToolBar() {
+        if (ll_show_client != null) {
+            if (Utils.curClient != null) {
+                iv_ClientBar.setImageResource(R.drawable.ic_baseline_select_client_24);
+                iv_ClientBar.setColorFilter(getResources().getColor(R.color.purple_500));
+                tv_NameClient.setText(Utils.curClient.getName());
+
+            } else {
+                iv_ClientBar.setImageResource(0);
+                tv_NameClient.setText("");
+            }
+        }
+
     }
 
 

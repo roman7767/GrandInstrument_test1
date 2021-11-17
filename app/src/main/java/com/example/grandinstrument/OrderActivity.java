@@ -29,6 +29,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -85,25 +86,15 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
 
     private void fillHeaderOnForm() {
-
-        tv_date = findViewById(R.id.tv_date);
         tv_date.setText(Utils.getDate(orderHeader.getOrder_date()));
-
-        tv_number = findViewById(R.id.tv_number);
         tv_number.setText(orderHeader.getId());
-
-        tv_Number1c = findViewById(R.id.tv_Number1c);
         tv_Number1c.setText(orderHeader.getOrder_number_1c());
-
-        etClient = findViewById(R.id.etClient);
         etClient.setText(orderHeader.getClient().getName());
 
-        sTypeOfShipment.setSelection(TypeOfShipment.getIndexByCode(orderHeader.getType_of_shipment_code()));
-
-        etSum = findViewById(R.id.etSum);
+        if (orderHeader.getType_of_shipment_code() != null){
+            sTypeOfShipment.setSelection(TypeOfShipment.getIndexByCode(orderHeader.getType_of_shipment_code()));
+        }
         etSum.setText(String.valueOf(orderHeader.getTotal()));
-
-
     }
 
     @Override
@@ -134,6 +125,12 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         shipmentAdapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item,Utils.shipmentList);
         shipmentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sTypeOfShipment.setAdapter(shipmentAdapter);
+
+        tv_date = findViewById(R.id.tv_date);
+        tv_number = findViewById(R.id.tv_number);
+        tv_Number1c = findViewById(R.id.tv_Number1c);
+        etClient = findViewById(R.id.etClient);
+        etSum = findViewById(R.id.etSum);
 
         fillHeaderOnForm();
 
@@ -174,8 +171,6 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             }
         });
     }
-
-
 
     private void SelectClient() {
 
@@ -659,9 +654,6 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
                 }
 
                 orderHeader.setTotal(total);
-                fillHeaderOnForm();
-
-
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -704,6 +696,9 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
                 mProgressDialog.dismiss();
             }
 
+            fillHeaderOnForm();
+            saveOrder();
+
 
         }
     }
@@ -745,6 +740,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     }
 
 
+
     private void saveOrderTo_1c() {
         setTypeOfShipmentToHeader();
 
@@ -757,6 +753,20 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             Utils.showAlert(this, "Ошибка сохранения заказа.","Не выбран способ отправки",null);
             return;
         }
+
+        ContentResolver contentResolver = getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER, DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,DataBaseContract.R_ORDER_ROW.R_UUID + "=?",new String[]{uuid},null);
+
+        if (cursor.getCount() == 0){
+            Utils.showAlert(this, "Ошибка сохранения заказа.","Заказ не содержит товаров.",null);
+            return;
+        }
+
+        saveOrder();
+
+        orderHeader.saveOrderTo_1c(this);
+
+
     }
 
     private void saveOrder() {
@@ -770,7 +780,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             Utils.showAlert(this, "Ошибка сохранения заказа.","Ошибка сохранения заказа.\n"+errors,null);
 
         }else{
-            finish();
+            //finish();
         }
 
     }

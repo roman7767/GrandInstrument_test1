@@ -173,15 +173,6 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
             if (v == increment_btn || v == decrease_btn){
                 if (Utils.curClient == null){
-//                    AlertDialog.Builder builder = new AlertDialog.Builder(Utils.mainContext);
-//                    builder.setTitle("Внимание!!!")
-//                            .setMessage("Для добавления товаров необходимо выбрать клиента.");
-//                    builder.setPositiveButton("Ок",null);
-//                    builder.setCancelable(true);
-//                    builder.create();
-//                    builder.show();
-//
-//                    return;
                     Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)));
                 }else{
                     Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_PRICE)));

@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_show_client"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_gravity="left" >
+
+    <!-- Menu Item Image -->
+    <ImageView
+        android:id="@+id/iv_ClientBar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:clickable="true"
+        android:src="@drawable/ic_baseline_select_client_24" />
+
+    <!-- Badge Count -->
+    <TextView
+        android:id="@+id/tv_NameClient"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:text="Клиент не выбран"
+        android:layout_gravity="center_vertical"
+        android:clickable="true"
+        android:textSize="20sp"
+        android:textColor="@color/black" />
+
+</LinearLayout>

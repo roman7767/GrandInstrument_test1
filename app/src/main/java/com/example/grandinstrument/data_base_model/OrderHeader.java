@@ -1,17 +1,37 @@
 package com.example.grandinstrument.data_base_model;
 
+import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import static android.widget.Toast.makeText;
 
 public class OrderHeader {
     private String id;
@@ -24,6 +44,15 @@ public class OrderHeader {
     private String type_of_shipment_code;
     private int qty;
     private double total;
+    private String error;
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
 
     public static boolean SaveOrderToBase(OrderHeader orderHeader, ContentResolver contentResolver, String errors) {
 
@@ -198,5 +227,288 @@ public class OrderHeader {
         return "Заказ №"+id+"  от "+ Utils.getDate(order_date)  +" : "+order_status;
     }
 
+
+     public boolean saveOrderTo_1c(Context context){
+         ContentResolver contentResolver = context.getContentResolver();
+         Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS, DataBaseContract.R_ORDER_ROW.R_UUID + "=?",
+                 new String[]{uuid},null);
+
+         if (cursor !=null && cursor.getCount() >0){
+             HashMap<String,String> hashMap;
+             ArrayList< HashMap<String,String>> data = new ArrayList<>();
+
+             for (int i=0; i<cursor.getCount(); i++){
+                 cursor.moveToPosition(i);
+                 hashMap = new HashMap<>();
+                 hashMap.put("guid",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C)));
+                 hashMap.put("qty",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
+                 data.add(hashMap);
+             }
+
+             if (data.size() > 0){
+
+                 SaveOrderTo_1c saveOrderTo_1c = new SaveOrderTo_1c(context,data, error);
+                 saveOrderTo_1c.execute();
+
+             }
+         }
+        return false;
+
+
+
+     }
+
+    private class SaveOrderTo_1c extends AsyncTask<String, Void, Void> {
+        private ProgressDialog mProgressDialog;
+
+        private Context mContext;
+        private String error = "";
+        private ArrayList< HashMap<String,String>> data;
+
+
+
+        public static final String REQUEST_METHOD = "POST";
+        public static final int READ_TIMEOUT = 150000;
+        public static final int CONNECTION_TIMEOUT = 150000;
+
+
+        public SaveOrderTo_1c(Context context, ArrayList< HashMap<String,String>> data, String error) {
+            this.mContext = context;
+            this.data  = data;
+            this.error  = error;
+        }
+
+        @Override
+        protected Void doInBackground(String... codeClient) {
+
+            error = "";
+            String stringUrl = Utils.mainServer + "/hs/ExchangeOrders/v1/send_order";
+            String result = null;
+            String inputLine;
+            HttpURLConnection connection = null;
+            boolean success;
+
+            JSONObject jsonObject = null;
+            JSONArray jsonData = null;
+            JSONArray jsonErrors = null;
+
+            //Create a connection
+            URL myUrl = null;
+            try {
+                myUrl = new URL(stringUrl);
+                connection =(HttpURLConnection) myUrl.openConnection();
+                connection.setRequestProperty("ID_android",Utils.GIUD_DEVICE);
+                connection.setRequestProperty("log_android",Utils.curUser.getEmail());
+                connection.setRequestProperty("pas_android",Utils.curUser.getPassword());
+                connection.setRequestProperty("Customer_Code_1C", getClient().getId_1c());
+                connection.setRequestProperty("APIkey", getClient().getApi_key());
+                connection.setRequestProperty("Accept", "application/json");
+
+
+
+                JSONObject requestObject = new JSONObject();
+                try {
+                    requestObject = Utils.getJSONObject(data);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    error = e.getMessage();
+                    return null;
+                }
+
+                try {
+                    requestObject.put("UID",getUuid());
+                    requestObject.put("Number",getId());
+                    requestObject.put("Comment","");
+                    requestObject.put("dispatch_method",getType_of_shipment_code());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    error = e.getMessage();
+                    return null;
+                }
+
+
+                //Set methods and timeouts
+                connection.setRequestMethod(REQUEST_METHOD);
+                connection.setReadTimeout(READ_TIMEOUT);
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+
+                //Request
+                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                wr.writeBytes(requestObject.toString());
+                wr.flush();
+                wr.close();
+
+
+
+
+                connection.connect();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+            try {
+                InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
+                //Create a new buffered reader and String Builder
+                BufferedReader reader = new BufferedReader(streamReader);
+                StringBuilder stringBuilder = new StringBuilder();
+                //Check if the line we are reading is not null
+                while((inputLine = reader.readLine()) != null){
+                    stringBuilder.append(inputLine);
+                }
+                //Close our InputStream and Buffered reader
+                reader.close();
+                streamReader.close();
+                //Set our result equal to our stringBuilder
+                result = stringBuilder.toString();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            try {
+                jsonObject = new JSONObject(result);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            try {
+                success = (boolean) jsonObject.getBoolean("success");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            if (!success) {
+                try {
+                    jsonErrors = jsonObject.getJSONArray("errors");
+                    for (int i = 0; i < jsonErrors.length(); i++) {
+                        String er = jsonErrors.getString(i);
+                        Log.i("request", er);
+                        error = error +"\n"+er;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    error = e.getMessage();
+                    return null;
+                }
+            }
+
+
+
+            try {
+                jsonData = jsonObject.getJSONArray("items");
+                ContentResolver contentResolver = Utils.mainContext.getContentResolver();
+                Cursor cursor_R = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,
+                        DataBaseContract.R_ORDER_ROW.R_UUID+"=?",new String[]{uuid},null);
+
+
+                ArrayList<ContentProviderOperation> list = new ArrayList<ContentProviderOperation>();
+
+                double total = 0;
+
+
+                for (int j=0; j<cursor_R.getCount();j++){
+                    boolean isPresent = false;
+                    cursor_R.moveToPosition(j);
+                    String id_1c_c = cursor_R.getString(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C));
+
+                    for (int i=0; i< jsonData.length();i++ ){
+                        JSONObject jObject = jsonData.getJSONObject(i);
+
+                        String id_1c = jObject.getString("guid");
+                        double price = jObject.getDouble("price");
+
+                        if (id_1c_c.equals(id_1c)){
+                            ContentValues contentValues = new ContentValues();
+                            contentValues.put(DataBaseContract.R_ORDER_ROW.R_PRICE, price);
+                            contentValues.put(DataBaseContract.R_ORDER_ROW.R_TOTAL, price*cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
+                            list.add(ContentProviderOperation.
+                                    newUpdate(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER)
+                                    .withSelection(DataBaseContract.R_ORDER_ROW.R_UUID+ "=? and "+DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C+ "=? ", new String[]{getUuid(),id_1c})
+                                    .withValues(contentValues)
+                                    .build());
+                            total = total + cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY))*price;
+                            isPresent = true;
+                            break;
+                        }
+                    }
+
+                    if (!isPresent){
+                        total = total + cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY))*cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_PRICE));
+                    }
+                }
+
+                ContentValues contentValues_H = new ContentValues();
+                contentValues_H.put(DataBaseContract.R_ORDER_HEADER.RH_TOTAL,total);
+                list.add(ContentProviderOperation.
+                        newUpdate(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER)
+                        .withSelection(DataBaseContract.R_ORDER_HEADER.RH_UUID+ "=? ", new String[]{getUuid()})
+                        .withValues(contentValues_H)
+                        .build());
+
+                try {
+                    contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
+
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    error = error + e.getMessage();
+                    return null;
+                } catch (OperationApplicationException e) {
+                    e.printStackTrace();
+                    error = error + e.getMessage();
+                    return null;
+                }
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = ProgressDialog.show(mContext, "Выгрузка заказа", "Выгружаем заказ...");
+            mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
+            mProgressDialog.setCancelable(true);
+        }
+
+
+
+        @Override
+        protected void onPostExecute(Void result) {
+            if (this.isCancelled()) {
+                result = null;
+                return;
+            }
+
+            if (error != null && !error.isEmpty()){
+                makeText(mContext,error, Toast.LENGTH_LONG).show();
+            }
+
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+            }
+
+        }
+    }
 
 }

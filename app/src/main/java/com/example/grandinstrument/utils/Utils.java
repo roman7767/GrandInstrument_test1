@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
 import static android.widget.Toast.makeText;
 
 
-public class Utils implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class Utils {
 
     public static User curUser;
     public static String mainServer;
@@ -80,8 +80,6 @@ public class Utils implements SharedPreferences.OnSharedPreferenceChangeListener
     public static String[] mStatuses;
 
     public static ArrayList<TypeOfShipment> shipmentList;
-
-
 
 
     public static void setShowPrice(Context context, boolean showPrice) {
@@ -914,20 +912,7 @@ public class Utils implements SharedPreferences.OnSharedPreferenceChangeListener
     }
 
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key == "server") {
-            Utils.mainServer = sharedPreferences.getString("server", String.valueOf(R.string.default_server));
-        }
 
-        if (key == "allow_load_from_url") {
-            Utils.allow_load_from_url = sharedPreferences.getBoolean("allow_load_from_url", false);
-        }
-
-        if (key == "showPrice") {
-            Utils.showPrice = sharedPreferences.getBoolean("showPrice", false);
-        }
-    }
 
     private static class ClearPriceColumns extends AsyncTask<Void, Void, Void> {
         private ProgressDialog mProgressDialog;

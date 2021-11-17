@@ -2,6 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+
+    <item
+        android:id="@+id/iClient"
+        android:actionLayout="@layout/show_client_menu_item"
+        android:icon="@drawable/ic_baseline_select_client_24"
+        app:showAsAction="always|withText"
+        android:title="Клиент"
+        >
+    </item>
     <item
         android:id="@+id/iCart"
         android:actionLayout="@layout/cart_menu_item"
