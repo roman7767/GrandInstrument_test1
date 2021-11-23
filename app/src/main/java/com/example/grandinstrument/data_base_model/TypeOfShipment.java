@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 
 import com.example.grandinstrument.utils.Utils;
 
+import java.util.Objects;
+
 public class TypeOfShipment {
     private String code_1c;
     private String name;
@@ -26,6 +28,22 @@ public class TypeOfShipment {
 
     public void setCode_main_type(String code_main_type) {
         this.code_main_type = code_main_type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TypeOfShipment that = (TypeOfShipment) o;
+        return available == that.available &&
+                Objects.equals(code_1c, that.code_1c) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(code_main_type, that.code_main_type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(code_1c, name, available, code_main_type);
     }
 
     public TypeOfShipment() {

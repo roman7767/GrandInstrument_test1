@@ -80,7 +80,6 @@ public class CartRecyclerViewAdapter extends RecyclerViewCursorAdapter<CartRecyc
             price_tv = view.findViewById(R.id.price_tv);
             present_cb = view.findViewById(R.id.present_cb);
             quantity_tv = view.findViewById(R.id.quantity_tv);
-            id_1c_tv = view.findViewById(R.id.id_1c_tv);
             iv_good_of_week = view.findViewById(R.id.iv_good_of_week);
 
             increment_btn = view.findViewById(R.id.increment_btn);

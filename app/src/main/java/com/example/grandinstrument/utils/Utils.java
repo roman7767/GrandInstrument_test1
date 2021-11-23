@@ -760,7 +760,7 @@ public class Utils {
 
             if (client == null){
                 client = new Client();
-                if (cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_CLIENT_PHONE)) != null){
+                if (cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_CLIENT_API_KEY)) != null){
 
                     client.setPhone(cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_CLIENT_PHONE)));
                     client.setName(cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_CLIENT_NAME)));
@@ -849,15 +849,16 @@ public class Utils {
         switch (string){
         case "Сохранен":
             status_iv.setImageResource(R.drawable.ic_baseline_save_order_24);
+            break;
+            case "Выгружен":
+                status_iv.setImageResource(R.drawable.ic_baseline_send_24);
+                break;
         }
 
     }
 
     public static void Fill_shipment_list() {
-        if (Utils.shipmentList == null){
-            Utils.shipmentList = new ArrayList<>();
-        }
-
+        Utils.shipmentList = new ArrayList<>();
         Utils.shipmentList.add(new TypeOfShipment());
 
         ContentResolver contentResolver = mainContext.getContentResolver();
@@ -911,7 +912,25 @@ public class Utils {
         builder.show();
     }
 
+    public static void changeClientOnCart() {
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        ContentValues contentValues = new ContentValues();
+        if (Utils.curClient == null){
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE, "");
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME, "");
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C, "");
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_GUID_1C, "");
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY, "");
+        }else{
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE, curClient.getPhone());
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME, curClient.getName());
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C, curClient.getId_1c());
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_GUID_1C, curClient.getGuid_1c());
+            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY, curClient.getApi_key());
+        }
 
+        contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,null,null);
+    }
 
 
     private static class ClearPriceColumns extends AsyncTask<Void, Void, Void> {

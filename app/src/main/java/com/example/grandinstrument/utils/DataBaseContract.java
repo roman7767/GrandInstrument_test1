@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public final class DataBaseContract implements BaseColumns {
 
-    public static final int DATA_BASE_VERSION = 20;
+    public static final int DATA_BASE_VERSION = 23;
     public static final String DATA_BASE_NAME = "gi_mobile_base";
     public static final String GOODS_TABLE_NAME = "goods_table";
 
@@ -189,6 +189,7 @@ public final class DataBaseContract implements BaseColumns {
         public static final String RH_CLIENT_API_KEY =  "client_api_key";
         public static final String RH_TYPE_OF_SHIPMENT =  "type_of_shipment";
         public static final String RH_TYPE_OF_SHIPMENT_CODE =  "type_of_shipment_code";
+        public static final String RH_COMMENT =  "comment";
 
 
         public static final String RH_QTY=  "qty";
@@ -208,6 +209,7 @@ public final class DataBaseContract implements BaseColumns {
                         RH_CLIENT_API_KEY,
                         RH_TYPE_OF_SHIPMENT,
                         RH_TYPE_OF_SHIPMENT_CODE,
+                        RH_COMMENT,
                         RH_QTY,
                         RH_TOTAL
 

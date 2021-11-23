@@ -29,15 +29,18 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Header;
 import com.example.grandinstrument.adapters.OrderRowRecyclerViewAdapter;
 import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.OrderHeader;
@@ -74,7 +77,12 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private String uuid;
     private ArrayAdapter shipmentAdapter;
     private ImageButton ibSelectClient;
+    private EditText et_comment;
+    private Button bt_reloadPrice;
+    private Button bt_save;
+    private Button bt_save_1c;
 
+    private boolean toSave;
     private boolean modified;
 
     private static final int ORDER_LOADER = 33;
@@ -84,8 +92,15 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private static String[] selectionArgs = new String[]{};
     private OrderHeader orderHeader;
 
+    public OrderHeader getOrderHeader() {
+        return orderHeader;
+    }
 
-    private void fillHeaderOnForm() {
+    public void setOrderHeader(OrderHeader orderHeader) {
+        this.orderHeader = orderHeader;
+    }
+
+    public void fillHeaderOnForm() {
         tv_date.setText(Utils.getDate(orderHeader.getOrder_date()));
         tv_number.setText(orderHeader.getId());
         tv_Number1c.setText(orderHeader.getOrder_number_1c());
@@ -95,6 +110,19 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             sTypeOfShipment.setSelection(TypeOfShipment.getIndexByCode(orderHeader.getType_of_shipment_code()));
         }
         etSum.setText(String.valueOf(orderHeader.getTotal()));
+        et_comment.setText(orderHeader.getComment());
+
+        if (!orderHeader.getOrder_status().equals("Сохранен")){
+            sTypeOfShipment.setEnabled(false);
+            ibSelectClient.setVisibility(View.GONE);
+            et_comment.setEnabled(false);
+
+            bt_reloadPrice.setEnabled(false);
+            bt_save.setEnabled(false);
+            bt_save_1c.setEnabled(false);
+        }
+
+        setTitle(orderHeader.toString());
     }
 
     @Override
@@ -116,6 +144,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         order_rv.setLayoutManager(manager);
         order_rv.hasFixedSize();
 
+
         Intent intent = getIntent();
         uuid = intent.getStringExtra(DataBaseContract.R_ORDER_HEADER.RH_UUID);
 
@@ -126,40 +155,31 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         shipmentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sTypeOfShipment.setAdapter(shipmentAdapter);
 
-        tv_date = findViewById(R.id.tv_date);
-        tv_number = findViewById(R.id.tv_number);
-        tv_Number1c = findViewById(R.id.tv_Number1c);
-        etClient = findViewById(R.id.etClient);
-        etSum = findViewById(R.id.etSum);
+        toSave=false;
 
-        fillHeaderOnForm();
-
-        selection = DataBaseContract.R_ORDER_ROW.R_UUID +" = ?";
-        selectionArgs = new String[]{uuid};
-
-        Button bt_save = findViewById(R.id.bt_save);
-        bt_save.setOnClickListener(new View.OnClickListener() {
+        sTypeOfShipment.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                saveOrder();
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (toSave){
+                    TypeOfShipment typeOfShipment = (TypeOfShipment) shipmentAdapter.getItem(position);
+
+                    if (orderHeader==null || typeOfShipment == null) {
+                        return;
+                    }else if (orderHeader.getType_of_shipment_code() == null ||
+                            (typeOfShipment.getCode_1c() == null && orderHeader.getType_of_shipment_code()!= null)||
+                            (orderHeader.getType_of_shipment_code() != null && !typeOfShipment.getCode_1c().equals(orderHeader.getType_of_shipment_code())) ){
+                        saveOrder();
+                    }
+                }
+
+                toSave =true;
+
+
             }
-        });
 
-        Button bt_save_1c = findViewById(R.id.bt_save_1c);
-        bt_save_1c.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onNothingSelected(AdapterView<?> parent) {
 
-
-                saveOrderTo_1c();
-            }
-        });
-
-        Button bt_reloadPrice = findViewById(R.id.bt_reloadPrice);
-        bt_reloadPrice.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loadPriceForOrder();
             }
         });
 
@@ -170,6 +190,64 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
                 SelectClient();
             }
         });
+        tv_date = findViewById(R.id.tv_date);
+        tv_number = findViewById(R.id.tv_number);
+        tv_Number1c = findViewById(R.id.tv_Number1c);
+        etClient = findViewById(R.id.etClient);
+        etSum = findViewById(R.id.etSum);
+        et_comment = findViewById(R.id.et_comment);
+        et_comment.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                        actionId == EditorInfo.IME_ACTION_DONE ||
+                        event != null &&
+                                event.getAction() == KeyEvent.ACTION_DOWN &&
+                                event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                    if (event == null || !event.isShiftPressed()) {
+
+                        saveOrder();
+                        return false; // consume.
+                    }
+                }
+                return false;
+            }
+        });
+
+        bt_save = findViewById(R.id.bt_save);
+        bt_save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveOrder();
+            }
+        });
+
+        bt_save_1c = findViewById(R.id.bt_save_1c);
+        bt_save_1c.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+                saveOrderTo_1c();
+            }
+        });
+
+        bt_reloadPrice = findViewById(R.id.bt_reloadPrice);
+        bt_reloadPrice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadPriceForOrder();
+            }
+        });
+
+        fillHeaderOnForm();
+
+        selection = DataBaseContract.R_ORDER_ROW.R_UUID +" = ?";
+        selectionArgs = new String[]{uuid};
+
+
+
+
     }
 
     private void SelectClient() {
@@ -232,221 +310,32 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             txtCodeClient.setError("Длина кода должна быть не меньше 4 символов.");
         }else{
             dialog.dismiss();
-            String codeClient = txtCodeClient.getText().toString();
-            OrderActivity.LoadClient loadClient = new OrderActivity.LoadClient(this);
-            loadClient.execute(codeClient);
-        }
-    }
+            //String codeClient = txtCodeClient.getText().toString();
 
-    private class LoadClient extends AsyncTask<String, Void, Void> {
-        private ProgressDialog mProgressDialog;
-
-        private Context mContext;
-        private String error = "";
-        private Client curClient;
-
-
-        public static final String REQUEST_METHOD = "POST";
-        public static final int READ_TIMEOUT = 150000;
-        public static final int CONNECTION_TIMEOUT = 150000;
-
-
-        public LoadClient(Context context) {
-            this.mContext = context;
-
-
-        }
-
-        @Override
-        protected Void doInBackground(String... codeClient) {
-
-            error = "";
-            // String stringUrl = Utils.mainServer +"/hs/GetClient/v1/get_client_by_code";
-            // String stringUrl = Utils.mainServer +"/hs/GetCatalog/v1/get_user";
-            String stringUrl = Utils.mainServer + getString(R.string.adress_get_client_by_code);
-            String result = null;
-            String inputLine;
-            HttpURLConnection connection = null;
-            boolean success;
-
-            JSONObject jsonObject = null;
-            JSONArray jsonData = null;
-            JSONArray jsonErrors = null;
-
-            //Create a connection
-            URL myUrl = null;
-            try {
-                myUrl = new URL(stringUrl);
-                connection =(HttpURLConnection) myUrl.openConnection();
-
-                connection.setRequestProperty("ID_android",Utils.GIUD_DEVICE);
-                connection.setRequestProperty("log_android",Utils.curUser.getEmail());
-                connection.setRequestProperty("pas_android",Utils.curUser.getPassword());
-                connection.setRequestProperty("Accept", "application/json");
-
-
-                String jsonInputString = "{\"code\":\"" +codeClient[0]+"\"}";
-
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Request
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(jsonInputString);
-                wr.flush();
-                wr.close();
-
-
-
-
-                connection.connect();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            try {
-                InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
-                //Create a new buffered reader and String Builder
-                BufferedReader reader = new BufferedReader(streamReader);
-                StringBuilder stringBuilder = new StringBuilder();
-                //Check if the line we are reading is not null
-                while((inputLine = reader.readLine()) != null){
-                    stringBuilder.append(inputLine);
-                }
-                //Close our InputStream and Buffered reader
-                reader.close();
-                streamReader.close();
-                //Set our result equal to our stringBuilder
-                result = stringBuilder.toString();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                jsonObject = new JSONObject(result);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                success = (boolean) jsonObject.getBoolean("success");
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            if (!success) {
-                try {
-                    jsonErrors = jsonObject.getJSONArray("errors");
-                    for (int i = 0; i < jsonErrors.length(); i++) {
-                        String er = jsonErrors.getString(i);
-                        Log.i("request", er);
-                        error = error +"\n"+er;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    error = e.getMessage();
-                    return null;
-                }
-            }
-
-            try {
-                jsonData = jsonObject.getJSONArray("items");
-                for (int i=0; i< jsonData.length();i++ ){
-                    JSONObject jObject = jsonData.getJSONObject(i);
-                    curClient =  new Client();
-                    curClient.setName(jObject.getString("name"));
-                    curClient.setId_1c(jObject.getString("code"));
-                    curClient.setGuid_1c(jObject.getString("guid"));
-                    curClient.setApi_key(jObject.getString("api_key"));
-                    break;
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            mProgressDialog = ProgressDialog.show(mContext, "Ищем контрагента", "Ищем контрагента ...");
-            mProgressDialog.setCanceledOnTouchOutside(false); // main method that force user cannot click outside
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dlg) {
-                    OrderActivity.LoadClient.this.cancel(true);
-                }
-            });
-        }
-
-
-
-        @Override
-        protected void onPostExecute(Void result) {
-            if (this.isCancelled()) {
-                result = null;
-                return;
-            }
-
-            if (error != null && !error.isEmpty()){
-                makeText(mContext,error, Toast.LENGTH_LONG).show();
-            }
-
-            if (mProgressDialog != null) {
-                mProgressDialog.dismiss();
-            }
-
-            if (curClient != null){
-
-                if (!orderHeader.getClient().equals(curClient)){
-                    etClient.setText(curClient.getName());
-
-                    orderHeader.setClient(curClient);
-                    changeClient();
-                }
-            }
+            Client.startLoadClient(OrderActivity.this,orderHeader.getClient(),curCode);
 
         }
     }
 
-    private void changeClient() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Внимание!!!")
-                .setMessage("Изменился клиент. Пересчитать цены?");
-        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                loadPriceForOrder();
-            }
-        });
-        builder.setNegativeButton("Нет", null);
-        builder.setCancelable(true);
-        builder.create();
-        builder.show();
+    public void changeClient() {
+        etClient.setText(orderHeader.getClient().getName());
+
+        loadPriceForOrder();
+
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle("Внимание!!!")
+//                .setMessage("Изменился клиент. Пересчитать цены?");
+//        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                loadPriceForOrder();
+//            }
+//        });
+//        builder.setNegativeButton("Нет", null);
+//        builder.setCancelable(true);
+//        builder.create();
+//        builder.show();
 
 
     }
@@ -671,6 +560,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             mProgressDialog = ProgressDialog.show(mContext, "Обновление цен", "Обновляем цены ...");
             mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
             mProgressDialog.setCancelable(true);
+            mProgressDialog.setIcon(R.drawable.ic_baseline_refresh_24);
             mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dlg) {
@@ -739,8 +629,6 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
          }
     }
 
-
-
     private void saveOrderTo_1c() {
         setTypeOfShipmentToHeader();
 
@@ -769,9 +657,16 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        saveOrder();
+    }
+
     private void saveOrder() {
 
         setTypeOfShipmentToHeader();
+        orderHeader.setComment(et_comment.getText().toString());
 
 
         String errors = "";
@@ -858,8 +753,12 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         int id = item.getItemId();
 
         if (id==android.R.id.home){
+            saveOrder();
             finish();
         }
         return true;
     }
+
+
+
 }

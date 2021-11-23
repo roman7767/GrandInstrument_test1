@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -45,6 +46,15 @@ public class OrderHeader {
     private int qty;
     private double total;
     private String error;
+    private String comment;
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
 
     public String getError() {
         return error;
@@ -73,6 +83,7 @@ public class OrderHeader {
 
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT, orderHeader.getType_of_shipment());
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT_CODE, orderHeader.getType_of_shipment_code());
+        content_H.put(DataBaseContract.R_ORDER_HEADER.RH_COMMENT, orderHeader.getComment());
 
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_TOTAL, orderHeader.getTotal());
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_QTY, orderHeader.getQty());
@@ -129,6 +140,7 @@ public class OrderHeader {
             curOrderHeader.setOrder_number_1c(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_ORDER_NUMBER_1c)));
             curOrderHeader.setType_of_shipment(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT)));
             curOrderHeader.setType_of_shipment_code(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT_CODE)));
+            curOrderHeader.setComment(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_COMMENT)));
             curOrderHeader.setQty(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_QTY)));
             curOrderHeader.setTotal(cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TOTAL)));
             curOrderHeader.setId(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_KEY_ID)));
@@ -224,7 +236,7 @@ public class OrderHeader {
 
     @Override
     public String toString() {
-        return "Заказ №"+id+"  от "+ Utils.getDate(order_date)  +" : "+order_status;
+        return "Заказ №"+id+"  от "+ Utils.getDate(order_date)  +". Статус:  "+order_status+".";
     }
 
 
@@ -318,7 +330,8 @@ public class OrderHeader {
                 try {
                     requestObject.put("UID",getUuid());
                     requestObject.put("Number",getId());
-                    requestObject.put("Comment","");
+                    //requestObject.put("Comment", URLEncoder.encode(getComment(), "UTF-16"));
+                    requestObject.put("Comment", URLEncoder.encode(getComment().replace(' ','~'),"UTF-8"));
                     requestObject.put("dispatch_method",getType_of_shipment_code());
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -373,7 +386,6 @@ public class OrderHeader {
 
             try {
                 jsonObject = new JSONObject(result);
-
             } catch (JSONException e) {
                 e.printStackTrace();
                 error = e.getMessage();
@@ -406,78 +418,20 @@ public class OrderHeader {
                 }
             }
 
-
-
-            try {
-                jsonData = jsonObject.getJSONArray("items");
-                ContentResolver contentResolver = Utils.mainContext.getContentResolver();
-                Cursor cursor_R = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,
-                        DataBaseContract.R_ORDER_ROW.R_UUID+"=?",new String[]{uuid},null);
-
-
-                ArrayList<ContentProviderOperation> list = new ArrayList<ContentProviderOperation>();
-
-                double total = 0;
-
-
-                for (int j=0; j<cursor_R.getCount();j++){
-                    boolean isPresent = false;
-                    cursor_R.moveToPosition(j);
-                    String id_1c_c = cursor_R.getString(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C));
-
-                    for (int i=0; i< jsonData.length();i++ ){
-                        JSONObject jObject = jsonData.getJSONObject(i);
-
-                        String id_1c = jObject.getString("guid");
-                        double price = jObject.getDouble("price");
-
-                        if (id_1c_c.equals(id_1c)){
-                            ContentValues contentValues = new ContentValues();
-                            contentValues.put(DataBaseContract.R_ORDER_ROW.R_PRICE, price);
-                            contentValues.put(DataBaseContract.R_ORDER_ROW.R_TOTAL, price*cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
-                            list.add(ContentProviderOperation.
-                                    newUpdate(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER)
-                                    .withSelection(DataBaseContract.R_ORDER_ROW.R_UUID+ "=? and "+DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C+ "=? ", new String[]{getUuid(),id_1c})
-                                    .withValues(contentValues)
-                                    .build());
-                            total = total + cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY))*price;
-                            isPresent = true;
-                            break;
-                        }
-                    }
-
-                    if (!isPresent){
-                        total = total + cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY))*cursor_R.getInt(cursor_R.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_PRICE));
-                    }
-                }
-
-                ContentValues contentValues_H = new ContentValues();
-                contentValues_H.put(DataBaseContract.R_ORDER_HEADER.RH_TOTAL,total);
-                list.add(ContentProviderOperation.
-                        newUpdate(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER)
-                        .withSelection(DataBaseContract.R_ORDER_HEADER.RH_UUID+ "=? ", new String[]{getUuid()})
-                        .withValues(contentValues_H)
-                        .build());
-
+            if (success){
                 try {
-                    contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
-
-                } catch (RemoteException e) {
+                    String Number_1c = jsonObject.getString("Number_1c");
+                    setOrder_number_1c(Number_1c);
+                } catch (JSONException e) {
                     e.printStackTrace();
-                    error = error + e.getMessage();
-                    return null;
-                } catch (OperationApplicationException e) {
-                    e.printStackTrace();
-                    error = error + e.getMessage();
+                    error = e.getMessage();
                     return null;
                 }
 
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
             }
+
+
+
 
             return null;
         }
@@ -501,7 +455,16 @@ public class OrderHeader {
             }
 
             if (error != null && !error.isEmpty()){
-                makeText(mContext,error, Toast.LENGTH_LONG).show();
+                Utils.showAlert(mContext,"Ошибка выгрузки заказа", error,"Ok");
+                //makeText(mContext,error, Toast.LENGTH_LONG).show();
+            }else{
+                Utils.showAlert(mContext,"Выгрузка заказа", OrderHeader.this.toString() + "\n Выгружен успешно.","Ok");
+                setOrder_status("Выгружен");
+                OrderHeader.SaveOrderToBase(OrderHeader.this,mContext.getContentResolver(),error);
+
+                OrderActivity orderActivity = (OrderActivity)mContext;
+                orderActivity.fillHeaderOnForm();
+
             }
 
             if (mProgressDialog != null) {

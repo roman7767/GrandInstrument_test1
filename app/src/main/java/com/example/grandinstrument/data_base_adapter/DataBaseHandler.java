@@ -22,10 +22,13 @@ public class DataBaseHandler extends SQLiteOpenHelper {
 
         if(listOfTable == null){
             listOfTable = new ArrayList<>();
-//            listOfTable.add(DataBaseContract.GOODS_TABLE_NAME);
-//            listOfTable.add(DataBaseContract.GOODS_PICTURE_TABLE_NAME);
-//            listOfTable.add(DataBaseContract.LOGIN_TABLE_NAME);
-//            listOfTable.add(DataBaseContract.CART_TABLE_NAME);
+            listOfTable.add(DataBaseContract.GOODS_TABLE_NAME);
+            listOfTable.add(DataBaseContract.GOODS_PICTURE_TABLE_NAME);
+            listOfTable.add(DataBaseContract.LOGIN_TABLE_NAME);
+            listOfTable.add(DataBaseContract.CART_TABLE_NAME);
+            listOfTable.add(DataBaseContract.ORDER_HEAD_TABLE_NAME);
+            listOfTable.add(DataBaseContract.ORDER_ROW_TABLE_NAME);
+            listOfTable.add(DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME);
         }
 
         for (int i = 0; i<listOfTable.size(); i++){
@@ -241,6 +244,7 @@ public class DataBaseHandler extends SQLiteOpenHelper {
                     DataBaseContract.R_ORDER_HEADER.RH_CLIENT_API_KEY+" text, " +
                     DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT+" text, " +
                     DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT_CODE+" text, " +
+                    DataBaseContract.R_ORDER_HEADER.RH_COMMENT+" text, " +
                     DataBaseContract.R_ORDER_HEADER.RH_QTY+" real, " +
                     DataBaseContract.R_ORDER_HEADER.RH_TOTAL+" real " +
                     ")";

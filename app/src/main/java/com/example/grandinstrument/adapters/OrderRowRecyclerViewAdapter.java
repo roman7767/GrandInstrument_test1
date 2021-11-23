@@ -74,7 +74,6 @@ public class OrderRowRecyclerViewAdapter extends RecyclerViewCursorAdapter<Order
             price_tv = view.findViewById(R.id.price_tv);
             present_cb = view.findViewById(R.id.present_cb);
             quantity_tv = view.findViewById(R.id.quantity_tv);
-            id_1c_tv = view.findViewById(R.id.id_1c_tv);
             iv_good_of_week = view.findViewById(R.id.iv_good_of_week);
 
             goods_iv.setOnClickListener(this);

@@ -71,6 +71,12 @@
                             android:textStyle="bold"
                             android:minWidth="100dp"
                             android:textSize="20sp" />
+                        <ImageButton
+                            android:id="@+id/ibSelectClient"
+                            android:src="@drawable/ic_baseline_select_client_24"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:contentDescription="Выбор клиента.." />
 
                     </LinearLayout>
 

@@ -225,6 +225,37 @@
                             android:textSize="20sp" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="4dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:orientation="horizontal"
+                        app:layout_constraintStart_toStartOf="parent">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:layout_weight="1.5"
+                            android:text="Комментарий:"
+                            android:textSize="20sp" />
+
+                        <EditText
+                            android:id="@+id/et_comment"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="2dp"
+                            android:layout_weight="1"
+                            android:hint="Комментарий"
+                            android:imeOptions="actionDone"
+                            android:singleLine="true"
+                            android:text="" />
+
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
@@ -266,6 +297,7 @@
             <Button
                 android:id="@+id/bt_save_1c"
                 android:layout_margin="2dp"
+                android:layout_gravity="center_vertical"
                 android:text="Выгрузить в 1с"
                 android:layout_weight="1"
                 android:layout_width="match_parent"
@@ -274,12 +306,14 @@
                 android:id="@+id/bt_reloadPrice"
                 android:layout_margin="2dp"
                 android:text="Обновить цены из 1с"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
 
         </LinearLayout>
+
 
     </androidx.cardview.widget.CardView>
 
@@ -290,7 +324,7 @@
 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="215dp"
+        android:layout_marginTop="270dp"
         android:layout_marginBottom="40dp"
         app:layout_constraintBottom_toTopOf="@+id/tv_Phone"
         app:layout_constraintEnd_toEndOf="parent"

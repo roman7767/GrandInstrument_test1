@@ -39,6 +39,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.util.Util;
 import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.TypeOfShipment;
 import com.example.grandinstrument.data_base_model.User;
@@ -406,14 +407,15 @@ public class MainActivity extends AppCompatActivity  {
 
     private void setVisibleClientInToolBar() {
         if (ll_show_client != null) {
-            if (Utils.curClient != null) {
+            if (Utils.curClient == null||Utils.curClient.getApi_key()==null||Utils.curClient.getApi_key().isEmpty()) {
+                iv_ClientBar.setImageResource(0);
+                tv_NameClient.setText("");
+
+            } else {
                 iv_ClientBar.setImageResource(R.drawable.ic_baseline_select_client_24);
                 iv_ClientBar.setColorFilter(getResources().getColor(R.color.purple_500));
                 tv_NameClient.setText(Utils.curClient.getName());
 
-            } else {
-                iv_ClientBar.setImageResource(0);
-                tv_NameClient.setText("");
             }
         }
 
@@ -434,10 +436,9 @@ public class MainActivity extends AppCompatActivity  {
 
         if (id == R.id.btChoseClient){
 
-            if (! Utils.checkCartIsEmpty("Перед выбором клиента необходимо сохранить или удалить товары из корзины.")){
-                return false;
-            }
-
+//            if (! Utils.checkCartIsEmpty("Перед выбором клиента необходимо сохранить или удалить товары из корзины.")){
+//                return false;
+//            }
 
             final EditText txtCodeClient = new EditText(this);
             txtCodeClient.setHint("");
@@ -494,14 +495,15 @@ public class MainActivity extends AppCompatActivity  {
 
         if (id==R.id.btClearClient){
 
-            if (! Utils.checkCartIsEmpty("Перед выбором клиента необходимо сохранить или удалить товары из корзины.")){
-                return false;
-            }
+//            if (! Utils.checkCartIsEmpty("Перед выбором клиента необходимо сохранить или удалить товары из корзины.")){
+//                return false;
+//            }
 
             Utils.curClient = null;
             setTitleActivity();
 
             Utils.clearPriceColumns(this);
+            Utils.changeClientOnCart();
         }
 
         if (id==android.R.id.home){
@@ -676,6 +678,8 @@ public class MainActivity extends AppCompatActivity  {
                     Utils.curClient.setId_1c(jObject.getString("code"));
                     Utils.curClient.setGuid_1c(jObject.getString("guid"));
                     Utils.curClient.setApi_key(jObject.getString("api_key"));
+
+                    Utils.changeClientOnCart();
                     break;
                 }
 

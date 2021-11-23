@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.exifinterface.media.ExifInterface;
@@ -86,7 +87,6 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             price_tv = view.findViewById(R.id.price_tv);
             present_cb = view.findViewById(R.id.present_cb);
             quantity_tv = view.findViewById(R.id.quantity_tv);
-            id_1c_tv = view.findViewById(R.id.id_1c_tv);
             iv_good_of_week = view.findViewById(R.id.iv_good_of_week);
             increment_btn = view.findViewById(R.id.increment_btn);
             increment_btn.setOnClickListener(this);
@@ -172,6 +172,13 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             }
 
             if (v == increment_btn || v == decrease_btn){
+                int curQty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_QUANTITY));
+
+                if (curQty == 0){
+                    Toast.makeText(mContext,"Не достаточно товара для добавления товара в корзину",Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 if (Utils.curClient == null){
                     Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)));
                 }else{
