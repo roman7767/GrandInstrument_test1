@@ -108,9 +108,9 @@ public class MainActivity extends AppCompatActivity  {
                     }
                 };
 
-//        //*********************
-//        Utils.curUser = User.getUserByEmail("e@e.com", this);
-//        //*********************
+        //*********************
+        Utils.curUser = User.getUserByEmail("e@e.com", this);
+        //*********************
 
         if (Utils.mStatuses == null){
             Utils.mStatuses = getResources().getStringArray( R.array.statuses_of_order);
@@ -211,8 +211,9 @@ public class MainActivity extends AppCompatActivity  {
 
         if (Utils.mCurCartQty != null && Utils.curClient == null){
             Utils.setupClientFromCart();
-            setTitleActivity();
         }
+
+        setTitleActivity();
     }
 
     @Override
@@ -442,13 +443,13 @@ public class MainActivity extends AppCompatActivity  {
 
             final EditText txtCodeClient = new EditText(this);
             txtCodeClient.setHint("");
-            txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
+            //txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
 
 
             final AlertDialog dialog;
             dialog = new AlertDialog.Builder(this)
-                    .setTitle("Код клиента")
-                    .setMessage("Введите код клиента")
+                    .setTitle("Код/наименование клиента")
+                    .setMessage("Введите код/наименование клиента")
                     .setView(txtCodeClient)
                     .setPositiveButton("ОК", null)
                     .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
@@ -470,6 +471,7 @@ public class MainActivity extends AppCompatActivity  {
                             case KeyEvent.KEYCODE_ENTER:
                                 String curCode = txtCodeClient.getText().toString().trim().replaceAll("\n","");
                                 startLoadClient(curCode,dialog,txtCodeClient);
+                                dialog.dismiss();
                                 return true;
 
                             default:
@@ -531,203 +533,27 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
-    private void startLoadClient(String curCode, Dialog dialog, EditText txtCodeClient){
-        if (curCode.length() < 4){
-            txtCodeClient.setError("Длина кода должна быть не меньше 4 символов.");
-        }else{
-            dialog.dismiss();
-            String codeClient = txtCodeClient.getText().toString();
-            LoadClient loadClient = new LoadClient(this);
-            loadClient.execute(codeClient);
-        }
+    public void setClient(Client client){
+        Utils.curClient = client;
+        Utils.changeClientOnCart();
+        Utils.loadPriceForCart(MainActivity.this);
+        setTitleActivity();
+
+        getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
     }
 
-    private class LoadClient extends AsyncTask<String, Void, Void> {
-        private ProgressDialog mProgressDialog;
+    public void choiceClient(ArrayList<Client> arrayChoiceOfClient) {
+        Utils.selectingClient(arrayChoiceOfClient, MainActivity.this);
+    }
 
-        private Context mContext;
-        private String error = "";
+    private void startLoadClient(String curCode, Dialog dialog, EditText txtCodeClient){
+        if (curCode.length() < 4){
+            txtCodeClient.setError("Длина кода/наименоания  должна быть не меньше 4 символов.");
+        }else{
+            dialog.dismiss();
+            //String codeClient = txtCodeClient.getText().toString();
 
-        public static final String REQUEST_METHOD = "POST";
-        public static final int READ_TIMEOUT = 150000;
-        public static final int CONNECTION_TIMEOUT = 150000;
-
-
-        public LoadClient(Context context) {
-            this.mContext = context;
-
-        }
-
-        @Override
-        protected Void doInBackground(String... codeClient) {
-
-            error = "";
-            // String stringUrl = Utils.mainServer +"/hs/GetClient/v1/get_client_by_code";
-            // String stringUrl = Utils.mainServer +"/hs/GetCatalog/v1/get_user";
-            String stringUrl = Utils.mainServer + getString(R.string.adress_get_client_by_code);
-            String result = null;
-            String inputLine;
-            HttpURLConnection connection = null;
-            boolean success;
-
-            JSONObject jsonObject = null;
-            JSONArray jsonData = null;
-            JSONArray jsonErrors = null;
-
-            //Create a connection
-            URL myUrl = null;
-            try {
-                myUrl = new URL(stringUrl);
-                connection =(HttpURLConnection) myUrl.openConnection();
-
-                connection.setRequestProperty("ID_android",Utils.GIUD_DEVICE);
-                connection.setRequestProperty("log_android",Utils.curUser.getEmail());
-                connection.setRequestProperty("pas_android",Utils.curUser.getPassword());
-                connection.setRequestProperty("Accept", "application/json");
-
-
-                String jsonInputString = "{\"code\":\"" +codeClient[0]+"\"}";
-
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Request
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(jsonInputString);
-                wr.flush();
-                wr.close();
-
-
-
-
-                connection.connect();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            try {
-                InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
-                //Create a new buffered reader and String Builder
-                BufferedReader reader = new BufferedReader(streamReader);
-                StringBuilder stringBuilder = new StringBuilder();
-                //Check if the line we are reading is not null
-                while((inputLine = reader.readLine()) != null){
-                    stringBuilder.append(inputLine);
-                }
-                //Close our InputStream and Buffered reader
-                reader.close();
-                streamReader.close();
-                //Set our result equal to our stringBuilder
-                result = stringBuilder.toString();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                jsonObject = new JSONObject(result);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                success = (boolean) jsonObject.getBoolean("success");
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            if (!success) {
-                try {
-                    jsonErrors = jsonObject.getJSONArray("errors");
-                    for (int i = 0; i < jsonErrors.length(); i++) {
-                        String er = jsonErrors.getString(i);
-                        Log.i("request", er);
-                        error = error +"\n"+er;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    error = e.getMessage();
-                    return null;
-                }
-            }
-
-            try {
-                jsonData = jsonObject.getJSONArray("items");
-                for (int i=0; i< jsonData.length();i++ ){
-                    JSONObject jObject = jsonData.getJSONObject(i);
-                    if (Utils.curClient == null){
-                        Utils.curClient = new Client();
-                    }
-                    Utils.curClient.setName(jObject.getString("name"));
-                    Utils.curClient.setId_1c(jObject.getString("code"));
-                    Utils.curClient.setGuid_1c(jObject.getString("guid"));
-                    Utils.curClient.setApi_key(jObject.getString("api_key"));
-
-                    Utils.changeClientOnCart();
-                    break;
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            mProgressDialog = ProgressDialog.show(mContext, "Ищем контрагента", "Ищем контрагента ...");
-            mProgressDialog.setCanceledOnTouchOutside(false); // main method that force user cannot click outside
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dlg) {
-                    LoadClient.this.cancel(true);
-                }
-            });
-        }
-
-
-
-        @Override
-        protected void onPostExecute(Void result) {
-            if (this.isCancelled()) {
-                result = null;
-                return;
-            }
-
-            if (error != null && !error.isEmpty()){
-                makeText(mContext,error, Toast.LENGTH_LONG).show();
-            }
-
-            if (mProgressDialog != null) {
-                mProgressDialog.dismiss();
-            }
-
-            setTitleActivity();
-
-            mContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
-
+            Client.startLoadClient(MainActivity.this,null,curCode);
 
         }
     }

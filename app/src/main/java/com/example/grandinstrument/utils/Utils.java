@@ -6,6 +6,7 @@ import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
@@ -32,6 +33,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.example.grandinstrument.CartActivity;
 import com.example.grandinstrument.MainActivity;
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.R;
@@ -46,9 +48,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -80,6 +89,8 @@ public class Utils {
     public static String[] mStatuses;
 
     public static ArrayList<TypeOfShipment> shipmentList;
+
+
 
 
     public static void setShowPrice(Context context, boolean showPrice) {
@@ -406,7 +417,7 @@ public class Utils {
         item.put("guid", guid);
         item.put("article", article);
         item.put("qty", 1);
-
+        items.put(item);
         obj.put("items", items);
         obj.put("Product_Row_Quantity", 1);
 
@@ -720,7 +731,328 @@ public class Utils {
         }
 
 
-        return sum;
+        return Math.round(sum*100.0)/100.0;
+    }
+
+    public static void loadPriceForCart(Context context) {
+
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,DataBaseContract.R_CART.CART_COLUMNS, null,null,null);
+
+        if (cursor !=null && cursor.getCount() >0){
+            HashMap<String,String> hashMap;
+            ArrayList< HashMap<String,String>> data = new ArrayList<>();
+
+            for (int i=0; i<cursor.getCount(); i++){
+                cursor.moveToPosition(i);
+                hashMap = new HashMap<>();
+                hashMap.put("guid",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C)));
+                hashMap.put("qty",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
+                data.add(hashMap);
+            }
+
+            if (data.size() > 0){
+
+                Utils.LoadPrice loadPrice = new Utils.LoadPrice(context,data);
+                loadPrice.execute();
+
+            }
+        }
+    }
+
+    private static void notifyClientSelected(Client client, Context context){
+
+        if (context instanceof OrderActivity){
+            ((OrderActivity) context).setClient(client);
+        }
+
+        if (context instanceof CartActivity){
+            ((CartActivity) context).setClient(client);
+        }
+
+        if (context instanceof MainActivity){
+            ((MainActivity) context).setClient(client);
+        }
+
+    }
+    public static void selectingClient(ArrayList<Client> arrayChoiceOfClient, Context context) {
+
+        if (arrayChoiceOfClient == null) {
+            return;
+        }
+
+        if (arrayChoiceOfClient.size() == 0) {
+            return;
+        }
+
+        if (arrayChoiceOfClient.size() == 1){
+            notifyClientSelected(arrayChoiceOfClient.get(0), context);
+            return;
+        }
+
+        ArrayList<String> arrayList = new ArrayList<>();
+        for (Client item:arrayChoiceOfClient) {
+            arrayList.add(item.getName()) ;
+        }
+
+
+        final CharSequence[] items = (CharSequence[]) arrayList.toArray(new CharSequence[arrayList.size()]);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Найденные клиенты:");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                notifyClientSelected(arrayChoiceOfClient.get(item), context);
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+    private static  class LoadPrice extends AsyncTask<String, Void, Void> {
+        private ProgressDialog mProgressDialog;
+
+        private Context mContext;
+        private String error = "";
+        private ArrayList<HashMap<String,String>> data;
+        private double total;
+
+
+
+        public static final String REQUEST_METHOD = "POST";
+        public static final int READ_TIMEOUT = 150000;
+        public static final int CONNECTION_TIMEOUT = 150000;
+
+
+        public LoadPrice(Context context, ArrayList< HashMap<String,String>> data) {
+            this.mContext = context;
+            this.data  = data;
+        }
+
+        @Override
+        protected Void doInBackground(String... codeClient) {
+
+            error = "";
+            String stringUrl = Utils.mainServer + "/hs/GetPrices/v1/get_price";
+            String result = null;
+            String inputLine;
+            HttpURLConnection connection = null;
+            boolean success;
+
+            JSONObject jsonObject = null;
+            JSONArray jsonData = null;
+            JSONArray jsonErrors = null;
+
+            //Create a connection
+            URL myUrl = null;
+            try {
+                myUrl = new URL(stringUrl);
+                connection =(HttpURLConnection) myUrl.openConnection();
+
+                connection.setRequestProperty("ID_android",Utils.GIUD_DEVICE);
+                connection.setRequestProperty("log_android",Utils.curUser.getEmail());
+                connection.setRequestProperty("pas_android",Utils.curUser.getPassword());
+                connection.setRequestProperty("Customer_Code_1C", Utils.curClient.getId_1c());
+                connection.setRequestProperty("APIkey",Utils.curClient.getApi_key());
+                connection.setRequestProperty("Accept", "application/json");
+
+
+
+                JSONObject requestObject = new JSONObject();
+                try {
+                    requestObject = Utils.getJSONObject(data);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    error = e.getMessage();
+                    return null;
+                }
+
+                //Set methods and timeouts
+                connection.setRequestMethod(REQUEST_METHOD);
+                connection.setReadTimeout(READ_TIMEOUT);
+                connection.setConnectTimeout(CONNECTION_TIMEOUT);
+
+                //Request
+                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                wr.writeBytes(requestObject.toString());
+                wr.flush();
+                wr.close();
+
+
+
+
+                connection.connect();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+            try {
+                InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
+                //Create a new buffered reader and String Builder
+                BufferedReader reader = new BufferedReader(streamReader);
+                StringBuilder stringBuilder = new StringBuilder();
+                //Check if the line we are reading is not null
+                while((inputLine = reader.readLine()) != null){
+                    stringBuilder.append(inputLine);
+                }
+                //Close our InputStream and Buffered reader
+                reader.close();
+                streamReader.close();
+                //Set our result equal to our stringBuilder
+                result = stringBuilder.toString();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            try {
+                jsonObject = new JSONObject(result);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            try {
+                success = (boolean) jsonObject.getBoolean("success");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+
+            if (!success) {
+                try {
+                    jsonErrors = jsonObject.getJSONArray("errors");
+                    for (int i = 0; i < jsonErrors.length(); i++) {
+                        String er = jsonErrors.getString(i);
+                        Log.i("request", er);
+                        error = error +"\n"+er;
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    error = e.getMessage();
+                    return null;
+                }
+            }
+
+
+
+            try {
+                jsonData = jsonObject.getJSONArray("items");
+                ContentResolver contentResolver = Utils.mainContext.getContentResolver();
+                Cursor cursor_C = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,DataBaseContract.R_CART.CART_COLUMNS,
+                        null,null,null);
+
+
+                ArrayList<ContentProviderOperation> list = new ArrayList<ContentProviderOperation>();
+
+                total = 0;
+
+
+                for (int j=0; j<cursor_C.getCount();j++){
+                    boolean isPresent = false;
+                    cursor_C.moveToPosition(j);
+                    String id_1c_c = cursor_C.getString(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_GOOD_GUID_1C));
+
+                    for (int i=0; i< jsonData.length();i++ ){
+                        JSONObject jObject = jsonData.getJSONObject(i);
+
+                        String id_1c = jObject.getString("guid");
+                        double price = jObject.getDouble("price");
+
+                        if (id_1c_c.equals(id_1c)){
+                            ContentValues contentValues = new ContentValues();
+                            contentValues.put(DataBaseContract.R_CART.RC_PRICE, price);
+                            contentValues.put(DataBaseContract.R_CART.RC_TOTAL, price*cursor_C.getInt(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_QTY)));
+                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY, Utils.curClient.getApi_key());
+                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C, Utils.curClient.getId_1c());
+                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME, Utils.curClient.getName());
+                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE, Utils.curClient.getPhone());
+                            list.add(ContentProviderOperation.
+                                    newUpdate(DataBaseContract.BASE_CONTENT_URI_CART)
+                                    .withSelection(DataBaseContract.R_CART.RC_GOOD_GUID_1C+ "=?", new String[]{id_1c})
+                                    .withValues(contentValues)
+                                    .build());
+                            total = total + cursor_C.getInt(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_QTY))*price;
+                            break;
+                        }
+                    }
+                }
+
+                try {
+                    contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
+
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                    error = error + e.getMessage();
+                    return null;
+                } catch (OperationApplicationException e) {
+                    e.printStackTrace();
+                    error = error + e.getMessage();
+                    return null;
+                }
+
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                error = e.getMessage();
+                return null;
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = ProgressDialog.show(mContext, "Обновление цен в корзине", "Обновляем цены ...");
+            mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
+            mProgressDialog.setCancelable(true);
+            mProgressDialog.setIcon(R.drawable.ic_baseline_refresh_24);
+            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dlg) {
+                    Utils.LoadPrice.this.cancel(true);
+                }
+            });
+        }
+
+
+
+        @Override
+        protected void onPostExecute(Void result) {
+            if (this.isCancelled()) {
+                result = null;
+                return;
+            }
+
+            if (error != null && !error.isEmpty()){
+                makeText(mContext,error, Toast.LENGTH_LONG).show();
+            }
+
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+            }
+
+            if (mCurSumCart==null){
+                mCurSumCart = new MutableLiveData<>();
+            }
+
+            mCurSumCart.setValue(total);
+        }
     }
 
     public static boolean saveCart(TypeOfShipment shipment) {

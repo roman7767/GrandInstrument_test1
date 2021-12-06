@@ -1,6 +1,7 @@
 package com.example.grandinstrument.adapters;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -134,34 +135,16 @@ public class CartRecyclerViewAdapter extends RecyclerViewCursorAdapter<CartRecyc
                 return;
             }
 
-//            if (v == goods_iv){
-//
-//                TextView tv = v.findViewById(R.id.article_tv);
-//
-//
-//
-//                Intent intent = new Intent(context, GoodsActivity.class);
-//                intent.putExtra("id_1c", id_1c);
-//                intent.putExtra("goods_iv", cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_URL_IMAGE)));
-//
-//                Utils.mainContext.startActivity(intent);
-//
-//            }
+            if (v == goods_iv){
+
+                TextView tv = v.findViewById(R.id.article_tv);
+                Intent intent = new Intent(context, GoodsActivity.class);
+                intent.putExtra("id_1c", id_1c);
+                Utils.mainContext.startActivity(intent);
+
+            }
 
             if (v == increment_btn || v == decrease_btn){
-                if (Utils.curClient == null){
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Utils.mainContext);
-                    builder.setTitle("Внимание!!!")
-                            .setMessage("Для добавления товаров необходимо выбрать клиента.");
-                    builder.setPositiveButton("Ок",null);
-                    builder.setCancelable(true);
-                    builder.create();
-                    builder.show();
-
-                    return;
-                }
-
-
 
                 Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_CART.RC_PRICE)));
 

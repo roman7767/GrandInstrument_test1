@@ -136,9 +136,9 @@
                             android:layout_marginLeft="4dp"
                             android:layout_weight="1"
                             android:focusable="auto"
-                            android:textStyle="bold"
                             android:minWidth="80dp"
-                            android:textSize="20sp" />
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>

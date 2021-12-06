@@ -83,8 +83,6 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private Button bt_save_1c;
 
     private boolean toSave;
-    private boolean modified;
-
     private static final int ORDER_LOADER = 33;
     private static final int ORDER_LOADER_WITH_SELECTION = 44;
 
@@ -254,13 +252,13 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
         final EditText txtCodeClient = new EditText(this);
         txtCodeClient.setHint("");
-        txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
+       // txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
 
 
         final android.app.AlertDialog dialog;
         dialog = new android.app.AlertDialog.Builder(this)
-                .setTitle("Код клиента")
-                .setMessage("Введите код клиента")
+                .setTitle("Код/наименование клиента")
+                .setMessage("Введите код/наименование клиента")
                 .setView(txtCodeClient)
                 .setPositiveButton("ОК", null)
                 .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
@@ -282,6 +280,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
                         case KeyEvent.KEYCODE_ENTER:
                             String curCode = txtCodeClient.getText().toString().trim().replaceAll("\n","");
                             startLoadClient(curCode,dialog,txtCodeClient);
+                            dialog.dismiss();
                             return true;
 
                         default:
@@ -300,6 +299,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             public void onClick(View v) {
                 String curCode = txtCodeClient.getText().toString().trim().replaceAll("\n","");
                 startLoadClient(curCode,dialog,txtCodeClient);
+                dialog.dismiss();
             }
         });
 
@@ -307,7 +307,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
     private void startLoadClient(String curCode, Dialog dialog, EditText txtCodeClient){
         if (curCode.length() < 4){
-            txtCodeClient.setError("Длина кода должна быть не меньше 4 символов.");
+            txtCodeClient.setError("Длина кода/наименоания  должна быть не меньше 4 символов.");
         }else{
             dialog.dismiss();
             //String codeClient = txtCodeClient.getText().toString();
@@ -320,24 +320,16 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
     public void changeClient() {
         etClient.setText(orderHeader.getClient().getName());
-
         loadPriceForOrder();
+    }
 
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle("Внимание!!!")
-//                .setMessage("Изменился клиент. Пересчитать цены?");
-//        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                loadPriceForOrder();
-//            }
-//        });
-//        builder.setNegativeButton("Нет", null);
-//        builder.setCancelable(true);
-//        builder.create();
-//        builder.show();
+    public void setClient(Client client){
+        orderHeader.setClient(client);
+        changeClient();
+    }
 
-
+    public void choiceClient(ArrayList<Client> arrayChoiceOfClient) {
+        Utils.selectingClient(arrayChoiceOfClient, this);
     }
 
     private class LoadPrice extends AsyncTask<String, Void, Void> {

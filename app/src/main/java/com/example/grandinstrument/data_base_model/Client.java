@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.grandinstrument.CartActivity;
+import com.example.grandinstrument.MainActivity;
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.R;
 import com.example.grandinstrument.utils.Utils;
@@ -22,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static android.widget.Toast.makeText;
@@ -43,8 +46,8 @@ public class Client {
 
         private Context mContext;
         private String error = "";
-        private Client curClient;
         private Client client;
+        private ArrayList<Client> arrayChoiceOfClient;
 
 
         public static final String REQUEST_METHOD = "POST";
@@ -85,7 +88,7 @@ public class Client {
                 connection.setRequestProperty("Accept", "application/json");
 
 
-                String jsonInputString = "{\"code\":\"" +codeClient[0]+"\"}";
+                String jsonInputString = "{\"code\":\"" + URLEncoder.encode(codeClient[0].replace(' ','~'),"UTF-8")+"\"}";
 
                 //Set methods and timeouts
                 connection.setRequestMethod(REQUEST_METHOD);
@@ -168,14 +171,17 @@ public class Client {
 
             try {
                 jsonData = jsonObject.getJSONArray("items");
+
+                arrayChoiceOfClient =new ArrayList<>();
+
                 for (int i=0; i< jsonData.length();i++ ){
                     JSONObject jObject = jsonData.getJSONObject(i);
-                    curClient =  new Client();
+                    Client curClient =  new Client();
                     curClient.setName(jObject.getString("name"));
                     curClient.setId_1c(jObject.getString("code"));
                     curClient.setGuid_1c(jObject.getString("guid"));
                     curClient.setApi_key(jObject.getString("api_key"));
-                    break;
+                    arrayChoiceOfClient.add(curClient);
                 }
 
             } catch (JSONException e) {
@@ -191,7 +197,7 @@ public class Client {
         protected void onPreExecute() {
             super.onPreExecute();
 
-            mProgressDialog = ProgressDialog.show(mContext, "Ищем контрагента", "Ищем контрагента ...");
+            mProgressDialog = ProgressDialog.show(mContext, "Ищем клиента", "Ищем клиента ...");
             mProgressDialog.setCanceledOnTouchOutside(false); // main method that force user cannot click outside
             mProgressDialog.setCancelable(true);
             mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -219,22 +225,21 @@ public class Client {
                 mProgressDialog.dismiss();
             }
 
-            if (curClient != null){
-
-                if (client == null || !client.equals(curClient)){
-
+            if (arrayChoiceOfClient != null){
                     if (mContext instanceof OrderActivity){
                         OrderActivity orderActivity = (OrderActivity)mContext;
-                        orderActivity.getOrderHeader().setClient(curClient);
-                        orderActivity.changeClient();
+                        orderActivity.choiceClient(arrayChoiceOfClient);
                     }
 
                     if (mContext instanceof CartActivity){
                         CartActivity cartActivity = (CartActivity)mContext;
-                        Utils.curClient = curClient;
-                        cartActivity.changeClient();
+                        cartActivity.choiceClient(arrayChoiceOfClient);
                     }
-                }
+
+                    if (mContext instanceof MainActivity){
+                        MainActivity mainActivity = (MainActivity)mContext;
+                        mainActivity.choiceClient(arrayChoiceOfClient);
+                    }
             }
 
         }

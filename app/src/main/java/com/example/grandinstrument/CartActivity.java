@@ -25,6 +25,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -118,7 +120,9 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         Utils.mCurSumCart.observe(this,new Observer<Double>() {
             @Override
             public void onChanged(Double value) {
-                etSum.setText(String.valueOf(value));
+
+                DecimalFormat precision = new DecimalFormat("0.00");
+                etSum.setText(precision.format(value));
             }
         });
 
@@ -147,13 +151,13 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
 
         final EditText txtCodeClient = new EditText(this);
         txtCodeClient.setHint("");
-        txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
+        //txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
 
 
         final android.app.AlertDialog dialog;
         dialog = new android.app.AlertDialog.Builder(this)
-                .setTitle("Код клиента")
-                .setMessage("Введите код клиента")
+                .setTitle("Код/наименование клиента")
+                .setMessage("Введите код/наименование клиента")
                 .setView(txtCodeClient)
                 .setPositiveButton("ОК", null)
                 .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
@@ -175,6 +179,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
                         case KeyEvent.KEYCODE_ENTER:
                             String curCode = txtCodeClient.getText().toString().trim().replaceAll("\n","");
                             startLoadClient(curCode,dialog,txtCodeClient);
+                            dialog.dismiss();
                             return true;
 
                         default:
@@ -201,291 +206,8 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
     public void changeClient() {
         etClient.setText(Utils.curClient.getName());
 
-        loadPriceForCart();
+        Utils.loadPriceForCart(this);
 
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle("Внимание!!!")
-//                .setMessage("Изменился клиент. Пересчитать цены?");
-//        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                loadPriceForOrder();
-//            }
-//        });
-//        builder.setNegativeButton("Нет", null);
-//        builder.setCancelable(true);
-//        builder.create();
-//        builder.show();
-
-
-    }
-
-    private class LoadPrice extends AsyncTask<String, Void, Void> {
-        private ProgressDialog mProgressDialog;
-
-        private Context mContext;
-        private String error = "";
-        private ArrayList<HashMap<String,String>> data;
-        private double total;
-
-
-
-        public static final String REQUEST_METHOD = "POST";
-        public static final int READ_TIMEOUT = 150000;
-        public static final int CONNECTION_TIMEOUT = 150000;
-
-
-        public LoadPrice(Context context, ArrayList< HashMap<String,String>> data) {
-            this.mContext = context;
-            this.data  = data;
-        }
-
-        @Override
-        protected Void doInBackground(String... codeClient) {
-
-            error = "";
-            String stringUrl = Utils.mainServer + "/hs/GetPrices/v1/get_price";
-            String result = null;
-            String inputLine;
-            HttpURLConnection connection = null;
-            boolean success;
-
-            JSONObject jsonObject = null;
-            JSONArray jsonData = null;
-            JSONArray jsonErrors = null;
-
-            //Create a connection
-            URL myUrl = null;
-            try {
-                myUrl = new URL(stringUrl);
-                connection =(HttpURLConnection) myUrl.openConnection();
-
-                connection.setRequestProperty("ID_android",Utils.GIUD_DEVICE);
-                connection.setRequestProperty("log_android",Utils.curUser.getEmail());
-                connection.setRequestProperty("pas_android",Utils.curUser.getPassword());
-                connection.setRequestProperty("Customer_Code_1C", Utils.curClient.getId_1c());
-                connection.setRequestProperty("APIkey",Utils.curClient.getApi_key());
-                connection.setRequestProperty("Accept", "application/json");
-
-
-
-                JSONObject requestObject = new JSONObject();
-                try {
-                    requestObject = Utils.getJSONObject(data);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    error = e.getMessage();
-                    return null;
-                }
-
-                //Set methods and timeouts
-                connection.setRequestMethod(REQUEST_METHOD);
-                connection.setReadTimeout(READ_TIMEOUT);
-                connection.setConnectTimeout(CONNECTION_TIMEOUT);
-
-                //Request
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(requestObject.toString());
-                wr.flush();
-                wr.close();
-
-
-
-
-                connection.connect();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            try {
-                InputStreamReader streamReader = new InputStreamReader(connection.getInputStream());
-                //Create a new buffered reader and String Builder
-                BufferedReader reader = new BufferedReader(streamReader);
-                StringBuilder stringBuilder = new StringBuilder();
-                //Check if the line we are reading is not null
-                while((inputLine = reader.readLine()) != null){
-                    stringBuilder.append(inputLine);
-                }
-                //Close our InputStream and Buffered reader
-                reader.close();
-                streamReader.close();
-                //Set our result equal to our stringBuilder
-                result = stringBuilder.toString();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                jsonObject = new JSONObject(result);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            try {
-                success = (boolean) jsonObject.getBoolean("success");
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-
-            if (!success) {
-                try {
-                    jsonErrors = jsonObject.getJSONArray("errors");
-                    for (int i = 0; i < jsonErrors.length(); i++) {
-                        String er = jsonErrors.getString(i);
-                        Log.i("request", er);
-                        error = error +"\n"+er;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    error = e.getMessage();
-                    return null;
-                }
-            }
-
-
-
-            try {
-                jsonData = jsonObject.getJSONArray("items");
-                ContentResolver contentResolver = Utils.mainContext.getContentResolver();
-                Cursor cursor_C = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,DataBaseContract.R_CART.CART_COLUMNS,
-                      null,null,null);
-
-
-                ArrayList<ContentProviderOperation> list = new ArrayList<ContentProviderOperation>();
-
-                total = 0;
-
-
-                for (int j=0; j<cursor_C.getCount();j++){
-                    boolean isPresent = false;
-                    cursor_C.moveToPosition(j);
-                    String id_1c_c = cursor_C.getString(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_GOOD_GUID_1C));
-
-                    for (int i=0; i< jsonData.length();i++ ){
-                        JSONObject jObject = jsonData.getJSONObject(i);
-
-                        String id_1c = jObject.getString("guid");
-                        double price = jObject.getDouble("price");
-
-                        if (id_1c_c.equals(id_1c)){
-                            ContentValues contentValues = new ContentValues();
-                            contentValues.put(DataBaseContract.R_CART.RC_PRICE, price);
-                            contentValues.put(DataBaseContract.R_CART.RC_TOTAL, price*cursor_C.getInt(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_QTY)));
-                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY, Utils.curClient.getApi_key());
-                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C, Utils.curClient.getId_1c());
-                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME, Utils.curClient.getName());
-                            contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE, Utils.curClient.getPhone());
-                            list.add(ContentProviderOperation.
-                                    newUpdate(DataBaseContract.BASE_CONTENT_URI_CART)
-                                    .withSelection(DataBaseContract.R_CART.RC_GOOD_GUID_1C+ "=?", new String[]{id_1c})
-                                    .withValues(contentValues)
-                                    .build());
-                            total = total + cursor_C.getInt(cursor_C.getColumnIndex(DataBaseContract.R_CART.RC_QTY))*price;
-                            break;
-                        }
-                    }
-                }
-
-                try {
-                    contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
-
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                    error = error + e.getMessage();
-                    return null;
-                } catch (OperationApplicationException e) {
-                    e.printStackTrace();
-                    error = error + e.getMessage();
-                    return null;
-                }
-
-
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                error = e.getMessage();
-                return null;
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            mProgressDialog = ProgressDialog.show(mContext, "Обновление цен", "Обновляем цены ...");
-            mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
-            mProgressDialog.setCancelable(true);
-            mProgressDialog.setIcon(R.drawable.ic_baseline_refresh_24);
-            mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dlg) {
-                    CartActivity.LoadPrice.this.cancel(true);
-                }
-            });
-        }
-
-
-
-        @Override
-        protected void onPostExecute(Void result) {
-            if (this.isCancelled()) {
-                result = null;
-                return;
-            }
-
-            if (error != null && !error.isEmpty()){
-                makeText(mContext,error, Toast.LENGTH_LONG).show();
-            }
-
-            if (mProgressDialog != null) {
-                mProgressDialog.dismiss();
-            }
-
-            Utils.mCurSumCart.setValue(total);
-        }
-    }
-
-    private void loadPriceForCart() {
-
-        ContentResolver contentResolver = getContentResolver();
-        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,DataBaseContract.R_CART.CART_COLUMNS, null,null,null);
-
-        if (cursor !=null && cursor.getCount() >0){
-            HashMap<String,String> hashMap;
-            ArrayList< HashMap<String,String>> data = new ArrayList<>();
-
-            for (int i=0; i<cursor.getCount(); i++){
-                cursor.moveToPosition(i);
-                hashMap = new HashMap<>();
-                hashMap.put("guid",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C)));
-                hashMap.put("qty",cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
-                data.add(hashMap);
-            }
-
-            if (data.size() > 0){
-
-                CartActivity.LoadPrice loadPrice = new CartActivity.LoadPrice(this,data);
-                loadPrice.execute();
-
-            }
-        }
     }
 
 
@@ -572,5 +294,13 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
     public void btDeleteOnClick(View view) {
         Utils.clearTable(DataBaseContract.CART_TABLE_NAME);
         finish();
+    }
+    public void setClient(Client client){
+        Utils.curClient = client;
+        changeClient();
+    }
+
+    public void choiceClient(ArrayList<Client> arrayChoiceOfClient) {
+        Utils.selectingClient(arrayChoiceOfClient, this);
     }
 }

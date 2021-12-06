@@ -172,12 +172,12 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             }
 
             if (v == increment_btn || v == decrease_btn){
-                int curQty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_QUANTITY));
-
-                if (curQty == 0){
-                    Toast.makeText(mContext,"Не достаточно товара для добавления товара в корзину",Toast.LENGTH_LONG).show();
-                    return;
-                }
+//                int curQty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_QUANTITY));
+//
+//                if (curQty == 0){
+//                    Toast.makeText(mContext,"Не достаточно товара для добавления товара в корзину",Toast.LENGTH_LONG).show();
+//                    return;
+//                }
 
                 if (Utils.curClient == null){
                     Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)));
