@@ -294,7 +294,7 @@ public class OrderHeader {
         protected Void doInBackground(String... codeClient) {
 
             error = "";
-            String stringUrl = Utils.mainServer + "/hs/ExchangeOrders/v1/send_order";
+            String stringUrl = Utils.mainServer + "/hs/ExchangeOrders/v1/send_order_draft";
             String result = null;
             String inputLine;
             HttpURLConnection connection = null;
