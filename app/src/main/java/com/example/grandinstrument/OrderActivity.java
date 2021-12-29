@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
@@ -33,6 +34,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -59,6 +61,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import static android.widget.Toast.makeText;
@@ -78,9 +81,12 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private ArrayAdapter shipmentAdapter;
     private ImageButton ibSelectClient;
     private EditText et_comment;
+    private EditText etDateOfDelivery;
+    private DatePickerDialog datePickerDialog;
     private Button bt_reloadPrice;
     private Button bt_save;
     private Button bt_save_1c;
+    private Button bt_change;
 
     private boolean toSave;
     private static final int ORDER_LOADER = 33;
@@ -114,7 +120,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             sTypeOfShipment.setEnabled(false);
             ibSelectClient.setVisibility(View.GONE);
             et_comment.setEnabled(false);
-
+            etDateOfDelivery.setEnabled(false);
             bt_reloadPrice.setEnabled(false);
             bt_save.setEnabled(false);
             bt_save_1c.setEnabled(false);
@@ -243,9 +249,45 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         selection = DataBaseContract.R_ORDER_ROW.R_UUID +" = ?";
         selectionArgs = new String[]{uuid};
 
+        bt_change = findViewById(R.id.bt_change);
+        bt_change.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                {changeOrder();}
+            }
+        });
 
+        etDateOfDelivery = (EditText) findViewById(R.id.etDateOfDelivery);
+        etDateOfDelivery.setText(orderHeader.getDelivery_date());
+        // perform click event on edit text
+        etDateOfDelivery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // calender class's instance and get current date , month and year from calender
+                final Calendar c = Calendar.getInstance();
+                int mYear = c.get(Calendar.YEAR); // current year
+                int mMonth = c.get(Calendar.MONTH); // current month
+                int mDay = c.get(Calendar.DAY_OF_MONTH); // current day
+                // date picker dialog
+                datePickerDialog = new DatePickerDialog(OrderActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
 
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+                                // set day of month , month and year value in the edit text
+                                String dateOfDelivery = dayOfMonth + "." + (monthOfYear + 1) + "." + year;
+                                etDateOfDelivery.setText(dateOfDelivery);
+                                orderHeader.setDelivery_date(dateOfDelivery);
 
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+            }
+        });
+    }
+
+    private void changeOrder() {
     }
 
     private void SelectClient() {
@@ -624,7 +666,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private void saveOrderTo_1c() {
         setTypeOfShipmentToHeader();
 
-        if (orderHeader.getClient() == null){
+        if (orderHeader.getClient() == null || orderHeader.getClient().getApi_key() == null){
             Utils.showAlert(this, "Ошибка сохранения заказа.","Не выбран клиент",null);
             return;
         }

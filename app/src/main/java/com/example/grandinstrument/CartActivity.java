@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentProviderOperation;
@@ -31,8 +32,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
@@ -57,6 +60,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import static android.widget.Toast.makeText;
@@ -71,6 +75,9 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
     private Spinner sTypeOfShipment;
     private ArrayAdapter shipmentAdapter;
     private ImageButton ibSelectClient;
+
+    private EditText etDateOfDelivery;
+    private DatePickerDialog datePickerDialog;
 
     private static final int CARD_LOADER = 0;
     private static final int CARD_LOADER_WITH_SELECTION = 1;
@@ -106,6 +113,27 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         shipmentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sTypeOfShipment.setAdapter(shipmentAdapter);
 
+        TypeOfShipment typeOfShipment = (TypeOfShipment) Utils.getValueFromCart(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT);
+        if (typeOfShipment != null){
+            sTypeOfShipment.setSelection(TypeOfShipment.getIndexByCode(typeOfShipment.getCode_1c()));
+        }
+        sTypeOfShipment.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TypeOfShipment typeOfShipment = Utils.shipmentList.get(position);
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT,typeOfShipment.getName());
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE,typeOfShipment.getCode_1c());
+
+                Utils.setValueInCart(contentValues);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
 
         etSum = findViewById(R.id.etSum);
 
@@ -131,6 +159,40 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
             @Override
             public void onClick(View v) {
                 SelectClient();
+            }
+        });
+
+        etDateOfDelivery = (EditText) findViewById(R.id.etDateOfDelivery);
+
+        etDateOfDelivery.setText(String.valueOf(Utils.getValueFromCart(DataBaseContract.R_CART.RC_DELIVERY_DATE)));
+        // perform click event on edit text
+        etDateOfDelivery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // calender class's instance and get current date , month and year from calender
+                final Calendar c = Calendar.getInstance();
+                int mYear = c.get(Calendar.YEAR); // current year
+                int mMonth = c.get(Calendar.MONTH); // current month
+                int mDay = c.get(Calendar.DAY_OF_MONTH); // current day
+                // date picker dialog
+                datePickerDialog = new DatePickerDialog(CartActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+                                // set day of month , month and year value in the edit text
+                                String textDate = dayOfMonth + "." + (monthOfYear + 1) + "." + year;
+                                etDateOfDelivery.setText(textDate);
+
+                                ContentValues contentValues = new ContentValues();
+                                contentValues.put(DataBaseContract.R_CART.RC_DELIVERY_DATE,textDate);
+                                Utils.setValueInCart(contentValues);
+
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+                datePickerDialog.show();
             }
         });
 
@@ -201,15 +263,17 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
+
+
     }
 
     public void changeClient() {
         etClient.setText(Utils.curClient.getName());
+        
 
         Utils.loadPriceForCart(this);
 
     }
-
 
     public void initLoader(int id_loader){
         LoaderManager.getInstance(this).initLoader(id_loader, null, this);

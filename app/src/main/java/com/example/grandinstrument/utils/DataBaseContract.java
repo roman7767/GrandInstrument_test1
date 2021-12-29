@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public final class DataBaseContract implements BaseColumns {
 
-    public static final int DATA_BASE_VERSION = 23;
+    public static final int DATA_BASE_VERSION = 25;
     public static final String DATA_BASE_NAME = "gi_mobile_base";
     public static final String GOODS_TABLE_NAME = "goods_table";
 
@@ -144,11 +144,15 @@ public final class DataBaseContract implements BaseColumns {
     public static final class R_CART{
         public static final String RC_KEY_ID = BaseColumns._ID;
         public static final String RC_UUID = "uuid";
+        public static final String RC_UUID_ORDER = "uuid_order";
+        public static final String RC_DELIVERY_DATE = "delivery_date";
         public static final String RC_CLIENT_NAME = "client_name";
         public static final String RC_CLIENT_ID_1C =  "client_id_1c";
         public static final String RC_CLIENT_GUID_1C =  "client_guid_1c";
         public static final String RC_CLIENT_PHONE =  "client_phone";
         public static final String RC_CLIENT_API_KEY =  "client_api_key";
+        public static final String RC_TYPE_OF_SHIPMENT =  "type_of_shipment";
+        public static final String RC_TYPE_OF_SHIPMENT_CODE =  "type_of_shipment_code";
 
         public static final String RC_GOOD_GUID_1C =  "good_guid_1c";
         public static final String RC_QTY=  "qty";
@@ -159,11 +163,15 @@ public final class DataBaseContract implements BaseColumns {
                 CART_TABLE_NAME + "." +
                         RC_KEY_ID,
                         RC_UUID,
+                        RC_UUID_ORDER,
+                        RC_DELIVERY_DATE,
                         RC_CLIENT_NAME,
                         RC_CLIENT_ID_1C,
                         RC_CLIENT_GUID_1C,
                         RC_CLIENT_PHONE,
                         RC_CLIENT_API_KEY,
+                        RC_TYPE_OF_SHIPMENT,
+                        RC_TYPE_OF_SHIPMENT_CODE,
                         RC_GOOD_GUID_1C,
                         RC_QTY,
                         RC_PRICE,
@@ -180,6 +188,7 @@ public final class DataBaseContract implements BaseColumns {
         public static final String RH_KEY_ID = BaseColumns._ID;
         public static final String RH_UUID = "uuid";
         public static final String RH_DATE = "order_date";
+        public static final String RH_DELIVERY_DATE = "delivery_date";
         public static final String RH_STATUS = "order_status";
         public static final String RH_ORDER_NUMBER_1c = "order_number_1c";
         public static final String RH_CLIENT_NAME = "client_name";
@@ -200,6 +209,7 @@ public final class DataBaseContract implements BaseColumns {
                         RH_KEY_ID,
                         RH_UUID,
                         RH_DATE,
+                        RH_DELIVERY_DATE,
                         RH_STATUS,
                         RH_ORDER_NUMBER_1c,
                         RH_CLIENT_NAME,

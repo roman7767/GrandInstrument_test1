@@ -38,12 +38,22 @@ public class OrderHeader {
     private String id;
     private String uuid;
     private double order_date;
+    private String delivery_date;
     private String order_status;
     private String order_number_1c;
     private Client client;
     private String type_of_shipment;
     private String type_of_shipment_code;
     private int qty;
+
+    public String getDelivery_date() {
+        return delivery_date;
+    }
+
+    public void setDelivery_date(String delivery_date) {
+        this.delivery_date = delivery_date;
+    }
+
     private double total;
     private String error;
     private String comment;
@@ -70,6 +80,7 @@ public class OrderHeader {
 
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_UUID, orderHeader.getUuid());
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_DATE, orderHeader.getOrder_date());
+        content_H.put(DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE, orderHeader.getDelivery_date());
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_STATUS, orderHeader.getOrder_status());
         content_H.put(DataBaseContract.R_ORDER_HEADER.RH_ORDER_NUMBER_1c, orderHeader.getOrder_number_1c());
 
@@ -136,6 +147,7 @@ public class OrderHeader {
 
             curOrderHeader.setClient(client);
             curOrderHeader.setOrder_date(cursor.getLong(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_DATE)));
+            curOrderHeader.setDelivery_date(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE)));
             curOrderHeader.setOrder_status(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_STATUS)));
             curOrderHeader.setOrder_number_1c(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_ORDER_NUMBER_1c)));
             curOrderHeader.setType_of_shipment(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT)));
@@ -144,6 +156,7 @@ public class OrderHeader {
             curOrderHeader.setQty(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_QTY)));
             curOrderHeader.setTotal(cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TOTAL)));
             curOrderHeader.setId(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_KEY_ID)));
+            curOrderHeader.setDelivery_date(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE)));
 
 
         }
@@ -333,6 +346,7 @@ public class OrderHeader {
                     //requestObject.put("Comment", URLEncoder.encode(getComment(), "UTF-16"));
                     requestObject.put("Comment", URLEncoder.encode(getComment().replace(' ','~'),"UTF-8"));
                     requestObject.put("dispatch_method",getType_of_shipment_code());
+                    requestObject.put("dateOfDelivery",getDelivery_date());
                 } catch (JSONException e) {
                     e.printStackTrace();
                     error = e.getMessage();
@@ -429,9 +443,6 @@ public class OrderHeader {
                 }
 
             }
-
-
-
 
             return null;
         }

@@ -2,6 +2,7 @@ package com.example.grandinstrument.utils;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -17,6 +18,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.RemoteException;
+import android.renderscript.Sampler;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -89,6 +91,7 @@ public class Utils {
     public static String[] mStatuses;
 
     public static ArrayList<TypeOfShipment> shipmentList;
+    public static MutableLiveData<Boolean> isLoadGoods;
 
 
 
@@ -809,6 +812,51 @@ public class Utils {
         builder.show();
     }
 
+    public static void setValueInCart(ContentValues contentValues) {
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,null);
+    }
+
+    public static Object getValueFromCart(String nameColumn) {
+        Object value = null;
+        String[] projection = null;
+        if (nameColumn == DataBaseContract.R_CART.RC_DELIVERY_DATE){
+            projection = new String[]{DataBaseContract.R_CART.RC_DELIVERY_DATE};
+        }
+        if (nameColumn == DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT){
+            projection = new String[]{DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT,DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE};
+        }
+
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,projection,null, null);
+        if (cursor.getCount() > 0){
+
+            cursor.moveToFirst();
+            if (nameColumn == DataBaseContract.R_CART.RC_DELIVERY_DATE) {
+                value = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_CART.RC_DELIVERY_DATE));
+                if (value == null){
+                    value = "";
+                }
+            };
+            if (nameColumn == DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT) {
+
+                String t = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT));
+                String tc = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE));
+
+                if (!(tc == null)){
+                    value = TypeOfShipment.getObjectByCode(tc);
+                }else{
+                    value = null;
+                }
+
+            };
+
+        }else{
+            value = "";
+        }
+        return value;
+    }
+
     private static  class LoadPrice extends AsyncTask<String, Void, Void> {
         private ProgressDialog mProgressDialog;
 
@@ -1071,6 +1119,7 @@ public class Utils {
         double totalSum = 0;
         String uuid = null;
         Client client = null;
+        String dateOfDelivery = null;
 
         ArrayList<ContentProviderOperation> list = new
                 ArrayList<ContentProviderOperation>();
@@ -1088,6 +1137,10 @@ public class Utils {
                 if (uuid==null || uuid.trim().isEmpty()){
                     uuid = UUID.randomUUID().toString();
                 }
+            }
+
+            if (dateOfDelivery == null){
+                dateOfDelivery = cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_DELIVERY_DATE));
             }
 
             if (client == null){
@@ -1145,6 +1198,7 @@ public class Utils {
             contentV_CartHeader.put(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT_CODE,shipment.getCode_1c());
         }
 
+        contentV_CartHeader.put(DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE,dateOfDelivery);
         contentV_CartHeader.put(DataBaseContract.R_ORDER_HEADER.RH_QTY,totalQty);
         contentV_CartHeader.put(DataBaseContract.R_ORDER_HEADER.RH_TOTAL,totalSum);
 

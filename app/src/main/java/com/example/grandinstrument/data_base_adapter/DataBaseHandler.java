@@ -130,6 +130,11 @@ public class DataBaseHandler extends SQLiteOpenHelper {
 
             if (!tableExists(db, DataBaseContract.CART_TABLE_NAME)){
                 listOfTable.add(DataBaseContract.CART_TABLE_NAME);
+            }else{
+                checkRowInTable(db,DataBaseContract.CART_TABLE_NAME,DataBaseContract.R_CART.RC_UUID_ORDER,"text");
+                checkRowInTable(db,DataBaseContract.CART_TABLE_NAME,DataBaseContract.R_CART.RC_DELIVERY_DATE,"text");
+                checkRowInTable(db,DataBaseContract.CART_TABLE_NAME,DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT,"text");
+                checkRowInTable(db,DataBaseContract.CART_TABLE_NAME,DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE,"text");
             }
 
             if (!tableExists(db, DataBaseContract.GOODS_PICTURE_TABLE_NAME)){
@@ -142,6 +147,8 @@ public class DataBaseHandler extends SQLiteOpenHelper {
 
             if (!tableExists(db, DataBaseContract.ORDER_HEAD_TABLE_NAME)){
                 listOfTable.add(DataBaseContract.ORDER_HEAD_TABLE_NAME);
+            }else{
+                checkRowInTable(db,DataBaseContract.ORDER_HEAD_TABLE_NAME,DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE,"text");
             }
 
             if (!tableExists(db, DataBaseContract.ORDER_ROW_TABLE_NAME)){
@@ -156,6 +163,14 @@ public class DataBaseHandler extends SQLiteOpenHelper {
             onCreate(db);
         }
 
+    }
+
+    private void checkRowInTable(SQLiteDatabase db, String tableName, String columnName, String type) {
+        String query = "SELECT * FROM "+tableName+" LIMIT 1";
+        Cursor cursor = db.rawQuery(query,null);
+        if (cursor.getColumnIndex(columnName) < 0){
+            db.execSQL("ALTER TABLE "+tableName+" ADD COLUMN "+columnName+" "+type);
+        }
     }
 
 
@@ -209,11 +224,15 @@ public class DataBaseHandler extends SQLiteOpenHelper {
             String CREATE_CART_TABLE = "create table "+ DataBaseContract.CART_TABLE_NAME+
                     "("+ DataBaseContract.R_CART.RC_KEY_ID+" integer primary key, "+
                     DataBaseContract.R_CART.RC_UUID+" text, "+
+                    DataBaseContract.R_CART.RC_UUID_ORDER+" text, "+
+                    DataBaseContract.R_CART.RC_DELIVERY_DATE+" text, "+
                     DataBaseContract.R_CART.RC_CLIENT_NAME+" text, "+
                     DataBaseContract.R_CART.RC_CLIENT_ID_1C+" text, "+
                     DataBaseContract.R_CART.RC_CLIENT_GUID_1C+" text," +
                     DataBaseContract.R_CART.RC_CLIENT_PHONE+" text, " +
                     DataBaseContract.R_CART.RC_CLIENT_API_KEY+" text, " +
+                    DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT+" text, " +
+                    DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE+" text, " +
                     DataBaseContract.R_CART.RC_GOOD_GUID_1C+" text, " +
                     DataBaseContract.R_CART.RC_QTY+" real, " +
                     DataBaseContract.R_CART.RC_PRICE+" real, " +
@@ -235,6 +254,7 @@ public class DataBaseHandler extends SQLiteOpenHelper {
                     "("+ DataBaseContract.R_ORDER_HEADER.RH_KEY_ID+" integer primary key, "+
                     DataBaseContract.R_ORDER_HEADER.RH_UUID+" text, "+
                     DataBaseContract.R_ORDER_HEADER.RH_DATE+" text, "+
+                    DataBaseContract.R_ORDER_HEADER.RH_DELIVERY_DATE+" text, "+
                     DataBaseContract.R_ORDER_HEADER.RH_STATUS+" text, "+
                     DataBaseContract.R_ORDER_HEADER.RH_ORDER_NUMBER_1c+" text," +
                     DataBaseContract.R_ORDER_HEADER.RH_CLIENT_NAME+" text, " +
