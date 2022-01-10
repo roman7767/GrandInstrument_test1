@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public final class DataBaseContract implements BaseColumns {
 
-    public static final int DATA_BASE_VERSION = 25;
+    public static final int DATA_BASE_VERSION = 26;
     public static final String DATA_BASE_NAME = "gi_mobile_base";
     public static final String GOODS_TABLE_NAME = "goods_table";
 
@@ -74,6 +74,9 @@ public final class DataBaseContract implements BaseColumns {
         public static final String RG_QUANTITY =  "quantity";
         public static final String RG_DATE_OF_RENOVATION= "date_of_renovation";
         public static final String RG_URL_IMAGE =  "url_of_image";
+        public static final String RG_BOX =  "in_box";
+        public static final String RG_PACKAGE=  "in_package";
+
 
 
         public static final String[] GOODS_COLUMNS_FOR_LIST = new String[] {
@@ -91,6 +94,8 @@ public final class DataBaseContract implements BaseColumns {
                         RG_QUANTITY,
                         RG_DATE_OF_RENOVATION,
                         RG_URL_IMAGE,
+                        RG_BOX,
+                        RG_PACKAGE
 
         };
 

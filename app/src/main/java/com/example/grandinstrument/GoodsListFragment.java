@@ -155,6 +155,8 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
 
         recyclerView = mainView.findViewById(R.id.goods_rv);
         etSeek =  mainView.findViewById(R.id.etSeek);
+
+
         etSeekBrand = mainView.findViewById(R.id.etSeekBrand);
         etPriceTo = mainView.findViewById(R.id.etPriceTo);
 
@@ -320,6 +322,8 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
             selectionArgs[i] = aArg.get(i);
         }
 
+
+        recyclerView.requestFocus();
         restartLoader(GOODS_LOADER);
     }
 

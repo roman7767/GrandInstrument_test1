@@ -95,6 +95,9 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         setTitle("Корзина");
+        if (Utils.curOrder !=null){
+            setTitle("Корзина для "+Utils.curOrder.toString());
+        }
 
         cart_rv = findViewById(R.id.order_rv);
         adapter = new CartRecyclerViewAdapter(this);
@@ -344,7 +347,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         return true;
     }
 
-    public void btSaveOnClick(View view) {
+    public void btSaveOnClick(View view) throws OperationApplicationException {
 
         TypeOfShipment shipment = (TypeOfShipment) sTypeOfShipment.getSelectedItem();
 
@@ -357,6 +360,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public void btDeleteOnClick(View view) {
         Utils.clearTable(DataBaseContract.CART_TABLE_NAME);
+        Utils.curOrder = null;
         finish();
     }
     public void setClient(Client client){

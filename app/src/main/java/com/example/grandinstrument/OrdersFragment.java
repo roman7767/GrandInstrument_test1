@@ -118,7 +118,7 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
                         DataBaseContract.R_ORDER_HEADER.ORDER_HEADER_COLUMNS,
                         selection,
                         selectionArgs,
-                        null
+                        DataBaseContract.R_ORDER_HEADER.RH_KEY_ID + " DESC"
                 );
                 return cursorLoader;
             default:

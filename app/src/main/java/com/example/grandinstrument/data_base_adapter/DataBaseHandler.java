@@ -126,6 +126,9 @@ public class DataBaseHandler extends SQLiteOpenHelper {
 
             if (!tableExists(db, DataBaseContract.GOODS_TABLE_NAME)){
                 listOfTable.add(DataBaseContract.GOODS_TABLE_NAME);
+            }else{
+                checkRowInTable(db,DataBaseContract.GOODS_TABLE_NAME,DataBaseContract.R_GOODS.RG_BOX,"real");
+                checkRowInTable(db,DataBaseContract.GOODS_TABLE_NAME,DataBaseContract.R_GOODS.RG_PACKAGE,"real");
             }
 
             if (!tableExists(db, DataBaseContract.CART_TABLE_NAME)){
@@ -191,7 +194,9 @@ public class DataBaseHandler extends SQLiteOpenHelper {
                     DataBaseContract.R_GOODS.RG_PRICE+" real, "+
                     DataBaseContract.R_GOODS.RG_QUANTITY+" real, "+
                     DataBaseContract.R_GOODS.RG_DATE_OF_RENOVATION+" text,"+
-                    DataBaseContract.R_GOODS.RG_URL_IMAGE+" text)";
+                    DataBaseContract.R_GOODS.RG_URL_IMAGE+" text,"+
+                    DataBaseContract.R_GOODS.RG_BOX+" real, "+
+                    DataBaseContract.R_GOODS.RG_PACKAGE+" real)";
 
             db.execSQL(CREATE_GOODS_TABLE);
             return true;

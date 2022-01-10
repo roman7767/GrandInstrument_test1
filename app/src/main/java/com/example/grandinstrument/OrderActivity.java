@@ -124,6 +124,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             bt_reloadPrice.setEnabled(false);
             bt_save.setEnabled(false);
             bt_save_1c.setEnabled(false);
+            bt_change.setEnabled(false);
         }
 
         setTitle(orderHeader.toString());
@@ -244,8 +245,6 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             }
         });
 
-        fillHeaderOnForm();
-
         selection = DataBaseContract.R_ORDER_ROW.R_UUID +" = ?";
         selectionArgs = new String[]{uuid};
 
@@ -282,12 +281,36 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
                             }
                         }, mYear, mMonth, mDay);
+                datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
                 datePickerDialog.show();
             }
         });
+
+        fillHeaderOnForm();
     }
 
     private void changeOrder() {
+
+        if (Utils.mCurCartQty.getValue()!=0){
+            final android.app.AlertDialog dialog;
+            dialog = new android.app.AlertDialog.Builder(this)
+                    .setTitle("Внимание!!!")
+                    .setMessage("Внимание корзина содержит товары, сохраните/очистите товары в корзине перед редактророванием  заказа.")
+                    .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setCancelable(true)
+                    .create();
+            dialog.show();
+            return;
+        }
+
+
+        orderHeader.loadOrderToCart(this);
+        finish();
+
     }
 
     private void SelectClient() {

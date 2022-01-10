@@ -1,7 +1,5 @@
 package com.example.grandinstrument.adapters;
 
-import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -21,8 +19,6 @@ import com.example.grandinstrument.R;
 import com.example.grandinstrument.data_base_model.Goods;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
-
-import org.json.JSONException;
 
 public class CartRecyclerViewAdapter extends RecyclerViewCursorAdapter<CartRecyclerViewAdapter.CartViewHolder> {
 
@@ -146,7 +142,7 @@ public class CartRecyclerViewAdapter extends RecyclerViewCursorAdapter<CartRecyc
 
             if (v == increment_btn || v == decrease_btn){
 
-                Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_CART.RC_PRICE)));
+                Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_CART.RC_PRICE)), false);
 
                 try{
                     TextView quantity_tv = ((ViewGroup) v.getParent()).findViewById(R.id.quantity_tv);

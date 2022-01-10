@@ -487,6 +487,8 @@ public class LoadFragment extends Fragment {
                         goods.setRrc(jsonObject.getLong("rrc"));
                         goods.setGood_of_week(jsonObject.getBoolean("good_of_week"));
                         goods.setPrice(0);
+                        goods.setIn_box(jsonObject.getInt("box"));
+                        goods.setIn_package(jsonObject.getInt("package"));
 
                         goodsArrayList.add(goods);
                     }
@@ -609,6 +611,8 @@ public class LoadFragment extends Fragment {
         contentValues.put(DataBaseContract.R_GOODS.RG_PRICE,g.getPrice());
         contentValues.put(DataBaseContract.R_GOODS.RG_AVAILABLE,g.isAvailable());
         contentValues.put(DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK,g.isGood_of_week());
+        contentValues.put(DataBaseContract.R_GOODS.RG_BOX,g.getIn_box());
+        contentValues.put(DataBaseContract.R_GOODS.RG_PACKAGE,g.getIn_package());
 
         return contentValues;
     }

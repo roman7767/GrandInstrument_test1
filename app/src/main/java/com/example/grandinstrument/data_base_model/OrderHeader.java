@@ -8,11 +8,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.exifinterface.media.ExifInterface;
 
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.utils.DataBaseContract;
@@ -282,6 +285,51 @@ public class OrderHeader {
 
 
      }
+
+    public void loadOrderToCart(Context context) {
+
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,
+                DataBaseContract.R_ORDER_ROW.R_UUID +"=?", new String[]{getUuid()},null);
+
+        if (cursor.getCount()!=0){
+            for (int i=0;i<cursor.getCount();i++){
+                cursor.moveToPosition(i);
+
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(DataBaseContract.R_CART.RC_UUID_ORDER, getUuid());
+                contentValues.put(DataBaseContract.R_CART.RC_DELIVERY_DATE, getDelivery_date());
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE, getType_of_shipment_code());
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT, getType_of_shipment());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY,getClient().getApi_key());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_GUID_1C, getClient().getGuid_1c());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME, getClient().getName());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE, getClient().getPhone());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C, getClient().getId_1c());
+
+                contentValues.put(DataBaseContract.R_CART.RC_GOOD_GUID_1C, cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_GOOD_GUID_1C)));
+
+                contentValues.put(DataBaseContract.R_CART.RC_PRICE, cursor.getLong(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_PRICE)));
+                contentValues.put(DataBaseContract.R_CART.RC_QTY, cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY)));
+                contentValues.put(DataBaseContract.R_CART.RC_TOTAL, cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_QTY))*cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_ROW.R_PRICE)));
+                contentResolver.insert(DataBaseContract.BASE_CONTENT_URI_CART,contentValues);
+
+
+            }
+
+            Utils.curOrder = this;
+
+            Utils.mCurCartQty.setValue(Utils.getQtyInCart());
+            if (Utils.mCurSumCart != null){
+                Utils.mCurSumCart.setValue(Utils.getSumCart());
+            }
+            if (getClient().getApi_key()!=null){
+                Utils.curClient = getClient();
+            }
+        }
+
+
+    }
 
     private class SaveOrderTo_1c extends AsyncTask<String, Void, Void> {
         private ProgressDialog mProgressDialog;

@@ -10,6 +10,24 @@ public class Goods {
     private String category;
     private boolean available;
     private float rrc;
+    private int in_box;
+    private int in_package;
+
+    public int getIn_box() {
+        return in_box;
+    }
+
+    public void setIn_box(int in_box) {
+        this.in_box = in_box;
+    }
+
+    public int getIn_package() {
+        return in_package;
+    }
+
+    public void setIn_package(int in_package) {
+        this.in_package = in_package;
+    }
 
     public String getCode_1c() {
         return code_1c;

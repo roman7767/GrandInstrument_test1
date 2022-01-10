@@ -2,7 +2,6 @@ package com.example.grandinstrument.utils;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -18,7 +17,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.RemoteException;
-import android.renderscript.Sampler;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -42,6 +40,7 @@ import com.example.grandinstrument.R;
 import com.example.grandinstrument.data_base_adapter.DataBaseHandler;
 import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.Goods;
+import com.example.grandinstrument.data_base_model.OrderHeader;
 import com.example.grandinstrument.data_base_model.TypeOfShipment;
 import com.example.grandinstrument.data_base_model.User;
 import com.example.grandinstrument.ui.login.LoginActivity;
@@ -59,7 +58,6 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -92,6 +90,8 @@ public class Utils {
 
     public static ArrayList<TypeOfShipment> shipmentList;
     public static MutableLiveData<Boolean> isLoadGoods;
+
+    public static OrderHeader curOrder;
 
 
 
@@ -566,10 +566,11 @@ public class Utils {
 
     }
 
-    public static void setCartChange(int value, String id_1c, double price) {
+    public static void setCartChange(int value, String id_1c, double price, boolean setDirectly) {
 
         ContentResolver contentResolver = mainContext.getContentResolver();
         ContentValues contentValues = new ContentValues();
+
 
         int curQty = 0;
         //Cursor cursorGood = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_GOODS,DataBaseContract.R_GOODS.GOODS_COLUMNS_FOR_LIST,DataBaseContract.R_GOODS.RG_ID_1C+"=?", new String[]{id_1c},null);
@@ -582,8 +583,12 @@ public class Utils {
             if (value < 0 && curQty==0){
                 return;
             }
+            if (setDirectly){
+                curQty= value;
+            }else{
+                curQty= curQty + value;
+            }
 
-            curQty= curQty + value;
 
             contentValues.put(DataBaseContract.R_CART.RC_QTY,curQty);
             contentValues.put(DataBaseContract.R_CART.RC_PRICE,price);
@@ -594,7 +599,12 @@ public class Utils {
             if (value < 0){
                 return;
             }else{
-                curQty = 1;
+                if (setDirectly){
+                    curQty= value;
+                }else{
+                    curQty = 1;
+                }
+
                 if (curClient != null){
                     contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME,curClient.getName());
                     contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C,curClient.getId_1c());
@@ -624,13 +634,15 @@ public class Utils {
 
     public static Integer getQtyInCart() {
 
-        String[] columns = new String[] { "sum(" + DataBaseContract.R_CART.RC_QTY + ")" };
+        //String[] columns = new String[] { "sum(" + DataBaseContract.R_CART.RC_QTY + ")" };
 
+        int qty = 0;
+        String[] columns = new String[] { DataBaseContract.R_CART.RC_GOOD_GUID_1C };
         ContentResolver contentResolver = mainContext.getContentResolver();
         Cursor cursorTotal = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,columns,null,null);
-        cursorTotal.moveToFirst();
-        int qty = 0;
-        qty= (int) (qty + cursorTotal.getDouble(0));
+        qty = cursorTotal.getCount();
+//        cursorTotal.moveToFirst();
+//        qty= (int) (qty + cursorTotal.getDouble(0));
 
         return  qty;
     }
@@ -1121,6 +1133,12 @@ public class Utils {
         Client client = null;
         String dateOfDelivery = null;
 
+        if (curOrder!=null){
+            uuid = curOrder.getUuid();
+        }
+
+
+
         ArrayList<ContentProviderOperation> list = new
                 ArrayList<ContentProviderOperation>();
         list.add(ContentProviderOperation.
@@ -1135,7 +1153,12 @@ public class Utils {
             if (uuid == null){
                 uuid = cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_UUID));
                 if (uuid==null || uuid.trim().isEmpty()){
-                    uuid = UUID.randomUUID().toString();
+                    if (curOrder!=null){
+                        uuid = curOrder.getUuid();
+                    }else{
+                        uuid = UUID.randomUUID().toString();
+                    }
+
                 }
             }
 
@@ -1155,6 +1178,7 @@ public class Utils {
                 }
 
             }
+
 
             int curQty = cursorCart.getInt(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_QTY));
             double curPrice = cursorCart.getDouble(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_PRICE));
@@ -1218,6 +1242,8 @@ public class Utils {
         try {
             contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
             clearTable(DataBaseContract.CART_TABLE_NAME);
+            curClient = null;
+            curOrder = null;
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -1226,6 +1252,8 @@ public class Utils {
             e.printStackTrace();
             return false;
         }
+
+        ((MainActivity)Utils.mainContext).setTitleActivity();
 
         return true;
 

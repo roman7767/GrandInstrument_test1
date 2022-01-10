@@ -96,7 +96,26 @@ public class DataBaseContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+        String tableName = uri.getPath().replace('/',' ').trim();
+        SQLiteDatabase db = dbOH.getWritableDatabase();
+        int match = uriMatcher.match(uri);
+        switch (match){
+            case DataBaseContract.URI_CODE_ALL_TABLE:
+
+                int i = db.delete(tableName,selection,selectionArgs);
+                if (i>0){
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return i;
+            case DataBaseContract.URI_CODE_ONE_ROW:
+                selection = DataBaseContract.R_GOODS.RG_KEY_ID +"=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                return db.delete(tableName,selection,selectionArgs);
+            default:
+                throw new IllegalArgumentException("Incorrect URI" + String.valueOf(uri));
+
+        }
     }
 
     @Override

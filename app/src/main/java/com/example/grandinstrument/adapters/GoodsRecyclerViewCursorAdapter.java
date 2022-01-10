@@ -1,20 +1,22 @@
 package com.example.grandinstrument.adapters;
 
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.text.InputType;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.exifinterface.media.ExifInterface;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
@@ -87,6 +89,8 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             price_tv = view.findViewById(R.id.price_tv);
             present_cb = view.findViewById(R.id.present_cb);
             quantity_tv = view.findViewById(R.id.quantity_tv);
+            quantity_tv.setClickable(true);
+            quantity_tv.setOnClickListener(this);
             iv_good_of_week = view.findViewById(R.id.iv_good_of_week);
             increment_btn = view.findViewById(R.id.increment_btn);
             increment_btn.setOnClickListener(this);
@@ -157,6 +161,11 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
                 return;
             }
 
+            if (v == quantity_tv) {
+                inputQty(v,id_1c,cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)) );
+                return;
+            }
+
             if (v == goods_iv){
 
                 TextView tv = v.findViewById(R.id.article_tv);
@@ -180,9 +189,9 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 //                }
 
                 if (Utils.curClient == null){
-                    Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)));
+                    Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)), false);
                 }else{
-                    Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_PRICE)));
+                    Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_PRICE)), false);
                 }
 
                try{
@@ -195,6 +204,69 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
         }
     }
 
+    private void inputQty(View v,String id_1c,double price) {
+
+        final EditText etQty = new EditText(Utils.mainContext);
+        etQty.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etQty.setHint("Введите количество");
+        etQty.setFocusable(true);
+        etQty.setFocusableInTouchMode(true);
+        etQty.requestFocus();
+
+        final android.app.AlertDialog dialog;
+        dialog = new android.app.AlertDialog.Builder(Utils.mainContext)
+                .setTitle("")
+                .setMessage("")
+                .setView(etQty)
+                .setPositiveButton("ОК", null)
+                .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        dialog.dismiss();
+                    }
+                })
+                .setCancelable(true)
+                .create();
+
+        etQty.setOnKeyListener(new View.OnKeyListener(){
+            public boolean onKey(View v, int keyCode, KeyEvent event)
+            {
+                if (event.getAction() == KeyEvent.ACTION_DOWN)
+                {
+                    switch (keyCode)
+                    {
+                        case KeyEvent.KEYCODE_ENTER:
+                            int curQty = Integer.parseInt(etQty.getText().toString());
+                            if (curQty >= 0) {
+                                ((TextView) v).setText(String.valueOf(curQty));
+                                Utils.setCartChange(curQty,id_1c,price, true);
+                            }
+                            dialog.dismiss();
+                            return true;
+
+                        default:
+                            break;
+                    }
+                }return false;
+            }
+        });
+
+        dialog.show();
+
+        Button b = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        b.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                int curQty = Integer.parseInt(etQty.getText().toString());
+                ((TextView) v).setText(String.valueOf(curQty));
+                Utils.setCartChange(curQty,id_1c,price, true);
+                dialog.dismiss();
+            }
+        });
+
+
+
+    }
 
 
 }
