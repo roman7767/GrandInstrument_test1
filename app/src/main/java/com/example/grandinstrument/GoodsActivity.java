@@ -32,6 +32,8 @@ public class GoodsActivity extends AppCompatActivity {
     private ContentResolver contentResolver;
     private Uri uri;
     private ImageView iv_good_of_week;
+    private TextView tvInBox;
+    private TextView tvInPackage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,8 @@ public class GoodsActivity extends AppCompatActivity {
         present_cb = findViewById(R.id.present_cb);
         iv_good_of_week = findViewById(R.id.iv_good_of_week);
         uri = DataBaseContract.BASE_CONTENT_URI_GOODS;
+        tvInBox = findViewById(R.id.tvInBox);
+        tvInPackage = findViewById(R.id.tvInPackage);
 
         Intent intent = getIntent();
         if (intent != null){
@@ -92,6 +96,8 @@ public class GoodsActivity extends AppCompatActivity {
                     }else{
                         iv_good_of_week.setVisibility(View.GONE);
                     }
+                    tvInBox.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_BOX))));
+                    tvInPackage.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_PACKAGE))));
                 }
             }
 

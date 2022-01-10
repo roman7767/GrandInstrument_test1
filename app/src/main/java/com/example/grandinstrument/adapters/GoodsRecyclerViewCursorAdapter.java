@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.text.InputType;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -63,19 +65,23 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
 
     public class GoodsViewHolder extends RecyclerViewCursorViewHolder implements View.OnClickListener {
-        public ImageView goods_iv;
-        public TextView article_tv;
-        public TextView description_tv;
-        public TextView brand_tv;
-        public TextView categories_tv;
-        public TextView rrc_tv;
-        public TextView price_tv;
-        public TextView present_cb;
-        public TextView quantity_tv;
-        public TextView id_1c_tv;
-        public ImageView iv_good_of_week;
-        public Button increment_btn;
-        public Button decrease_btn;
+        private ImageView goods_iv;
+        private TextView article_tv;
+        private TextView description_tv;
+        private TextView brand_tv;
+        private TextView categories_tv;
+        private TextView rrc_tv;
+        private TextView price_tv;
+        private TextView present_cb;
+        private TextView quantity_tv;
+        private TextView id_1c_tv;
+        private ImageView iv_good_of_week;
+        private Button increment_btn;
+        private Button decrease_btn;
+        private TextView tvInBox;
+        private TextView tvInPackage;
+        private RelativeLayout rlBox;
+        private RelativeLayout rlPackage;
 
 
         public GoodsViewHolder(View view) {
@@ -100,6 +106,12 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
             goods_iv.setOnClickListener(this);
 
+            tvInBox = view.findViewById(R.id.tvInBox);
+            tvInPackage = view.findViewById(R.id.tvInPackage);
+
+            rlBox = view.findViewById(R.id.rlBox);
+            rlPackage = view.findViewById(R.id.rlPackage);
+
         }
 
 
@@ -121,6 +133,28 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
                 price_tv.setText(String.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_PRICE))));
             }
 
+            int inBox = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_BOX));
+            if (inBox==0){
+                rlBox.setVisibility(View.GONE);
+            }else{
+                if (inBox > 99){
+                    tvInBox.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+                }else{
+                    tvInBox.setTextSize(TypedValue.COMPLEX_UNIT_SP,20);
+                }
+                tvInBox.setText(String.valueOf(inBox));
+            }
+            int inPackage = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_PACKAGE));
+            if (inPackage==0){
+                rlPackage.setVisibility(View.GONE);
+            }else{
+                if (inPackage > 99){
+                    tvInPackage.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
+                }else{
+                    tvInPackage.setTextSize(TypedValue.COMPLEX_UNIT_SP,20);
+                }
+                tvInPackage.setText(String.valueOf(inPackage));
+            }
 
 
             boolean needGetData = Utils.setTextAvailable(context,present_cb,cursor.getInt(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_QUANTITY)),true,cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_DATE_OF_RENOVATION)));
