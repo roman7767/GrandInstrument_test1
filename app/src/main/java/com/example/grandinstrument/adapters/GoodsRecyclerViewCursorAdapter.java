@@ -1,6 +1,8 @@
 package com.example.grandinstrument.adapters;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -196,7 +198,7 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             }
 
             if (v == quantity_tv) {
-                inputQty(v,id_1c,cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)) );
+                inputQty(v,id_1c,cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)), quantity_tv.getText().toString());
                 return;
             }
 
@@ -215,12 +217,6 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             }
 
             if (v == increment_btn || v == decrease_btn){
-//                int curQty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_QUANTITY));
-//
-//                if (curQty == 0){
-//                    Toast.makeText(mContext,"Не достаточно товара для добавления товара в корзину",Toast.LENGTH_LONG).show();
-//                    return;
-//                }
 
                 if (Utils.curClient == null){
                     Utils.setCartChange(v == decrease_btn?-1:1,id_1c, cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC)), false);
@@ -238,14 +234,17 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
         }
     }
 
-    private void inputQty(View v,String id_1c,double price) {
+    private void inputQty(View v, String id_1c, double price, String curQty) {
 
         final EditText etQty = new EditText(Utils.mainContext);
         etQty.setInputType(InputType.TYPE_CLASS_NUMBER);
         etQty.setHint("Введите количество");
+        etQty.setText(curQty=="0"?"":curQty);
         etQty.setFocusable(true);
         etQty.setFocusableInTouchMode(true);
         etQty.requestFocus();
+
+
 
         final android.app.AlertDialog dialog;
         dialog = new android.app.AlertDialog.Builder(Utils.mainContext)
@@ -269,8 +268,14 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
                     switch (keyCode)
                     {
                         case KeyEvent.KEYCODE_ENTER:
-                            int curQty = Integer.parseInt(etQty.getText().toString());
-                            if (curQty >= 0) {
+                            int curQty = 0;
+                            try {
+                                curQty = Integer.parseInt(etQty.getText().toString());
+                            } catch (Exception e){
+                                curQty = 0;
+                            }
+
+                            if (curQty >0) {
                                 ((TextView) v).setText(String.valueOf(curQty));
                                 Utils.setCartChange(curQty,id_1c,price, true);
                             }
@@ -291,7 +296,12 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
             @Override
             public void onClick(View v) {
-                int curQty = Integer.parseInt(etQty.getText().toString());
+                int curQty = 0;
+                try {
+                    curQty = Integer.parseInt(etQty.getText().toString());
+                } catch (Exception e){
+                    curQty = 0;
+                }
                 ((TextView) v).setText(String.valueOf(curQty));
                 Utils.setCartChange(curQty,id_1c,price, true);
                 dialog.dismiss();

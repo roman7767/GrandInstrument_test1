@@ -2,6 +2,7 @@ package com.example.grandinstrument.utils;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -16,12 +17,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.volley.AuthFailureError;
@@ -629,7 +633,7 @@ public class Utils {
         }
 
 
-        //mainContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
+        mainContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
     }
 
     public static Integer getQtyInCart() {
@@ -824,6 +828,7 @@ public class Utils {
         builder.show();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     public static void setValueInCart(ContentValues contentValues) {
         ContentResolver contentResolver = mainContext.getContentResolver();
         contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,null);
@@ -867,6 +872,87 @@ public class Utils {
             value = "";
         }
         return value;
+    }
+
+    public static void addAllDiscountGoods(Context context) {
+
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
+        builder.setTitle("Добавление товаров недели.");
+        builder.setMessage("Добавить все товары неделеи в корзину?");
+        builder.setCancelable(true);
+        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                addAllDiscountGoods_next();
+            }
+        });
+        builder.setNegativeButton("Нет",null);
+
+
+
+        builder.show();
+
+    }
+
+    private static void addAllDiscountGoods_next() {
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_GOODS,DataBaseContract.R_GOODS.GOODS_COLUMNS_FOR_LIST,DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK +"= true", null,null);
+
+
+
+        ContentValues contentValues = new ContentValues();
+        for (int i=0; i< cursor.getCount(); i++){
+            cursor.moveToPosition(i);
+
+            String UUID = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_ID_1C));
+            if (curClient != null){
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_NAME,curClient.getName());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_ID_1C,curClient.getId_1c());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_GUID_1C,curClient.getGuid_1c());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_PHONE,curClient.getPhone());
+                contentValues.put(DataBaseContract.R_CART.RC_CLIENT_API_KEY,curClient.getApi_key());
+            }else{
+
+            }
+            double price = cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_PRICE));
+
+            contentValues.put(DataBaseContract.R_CART.RC_GOOD_GUID_1C,UUID);
+            contentValues.put(DataBaseContract.R_CART.RC_PRICE,price);
+
+
+            int qty = 0;
+            boolean isInCart=false;
+            Cursor cursorCart = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,DataBaseContract.R_CART.CART_COLUMNS,DataBaseContract.R_CART.RC_GOOD_GUID_1C+"=?",new String[]{UUID},null);
+            if (cursorCart.getCount() > 0){
+                cursorCart.moveToFirst();
+                qty += cursorCart.getInt(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_QTY));
+
+                contentValues.put(DataBaseContract.R_CART.RC_DELIVERY_DATE,cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_DELIVERY_DATE)));
+                contentValues.put(DataBaseContract.R_CART.RC_UUID_ORDER,cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_UUID_ORDER)));
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT,cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT)));
+                contentValues.put(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE,cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_TYPE_OF_SHIPMENT_CODE)));
+                isInCart = true;
+            }
+
+            qty++;
+
+            contentValues.put(DataBaseContract.R_CART.RC_QTY,qty);
+            contentValues.put(DataBaseContract.R_CART.RC_TOTAL,price*qty);
+
+            if (isInCart){
+                contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,DataBaseContract.R_CART.RC_GOOD_GUID_1C+"=?",new String[]{UUID});
+            }else{
+                contentResolver.insert(DataBaseContract.BASE_CONTENT_URI_CART,contentValues);
+            }
+
+        }
+        mCurCartQty.setValue(getQtyInCart());
+        if (mCurSumCart != null){
+            mCurSumCart.setValue(getSumCart());
+        }
+
+        mainContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
+
     }
 
     private static  class LoadPrice extends AsyncTask<String, Void, Void> {

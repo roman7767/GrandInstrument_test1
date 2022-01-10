@@ -149,7 +149,12 @@
                             android:minWidth="80dp"
                             android:textSize="20sp" />
                     </LinearLayout>
-
+                    <Button
+                        android:id="@+id/btAddAllDiscountGoods"
+                        android:textSize="20sp"
+                        android:text="Добавить товары недели в заказ"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
 
                 <ImageButton
@@ -179,8 +184,8 @@
 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="220dp"
         android:layout_marginBottom="40dp"
-        android:layout_marginTop="180dp"
         app:layout_constraintBottom_toTopOf="@+id/tv_Phone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

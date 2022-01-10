@@ -166,7 +166,12 @@
 
             </LinearLayout>
 
-
+            <Button
+                android:id="@+id/btAddAllDiscountGoods"
+                android:textSize="20sp"
+                android:text="Добавить товары недели в заказ"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
@@ -177,7 +182,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginLeft="2dp"
-        android:layout_marginTop="180dp"
+        android:layout_marginTop="220dp"
         android:layout_marginBottom="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -213,11 +218,11 @@
                     android:textStyle="normal" />
 
                 <TextView
-                    android:layout_weight="1"
                     android:id="@+id/description_tv"
                     android:layout_width="450dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:layout_weight="1"
                     android:background="@color/grand_color"
                     android:gravity="center"
 

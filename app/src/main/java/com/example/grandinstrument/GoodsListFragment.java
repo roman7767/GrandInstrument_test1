@@ -86,6 +86,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
     private MenuItem itemMenuShowPrice;
     private TextView tvTitle;
     private View mainView;
+    private Button btAddAllDiscountGoods;
 
 
     public void setTitleActivity(){
@@ -161,15 +162,12 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
         etSeekBrand = mainView.findViewById(R.id.etSeekBrand);
         etPriceTo = mainView.findViewById(R.id.etPriceTo);
 
-
         adapter = new GoodsRecyclerViewCursorAdapter(mContext);
         manager = new LinearLayoutManager(mContext);
 
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(manager);
         recyclerView.hasFixedSize();
-
-
 
         etSeek.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -234,6 +232,13 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
             }
         });
 
+        btAddAllDiscountGoods = mainView.findViewById(R.id.btAddAllDiscountGoods);
+        btAddAllDiscountGoods.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Utils.addAllDiscountGoods(Utils.mainContext);
+            }
+        });
         return mainView;
     }
 
