@@ -38,6 +38,8 @@ public final class DataBaseContract implements BaseColumns {
     public static final int URI_CODE_ALL_TABLE = 1;
     public static final int URI_CODE_ONE_ROW = 2;
 
+    public static final String STATUS_UPLOADED = "Выгружен";
+
     public static final class ALL_TABLES{
 
         public static ArrayList<String> all_tables(){

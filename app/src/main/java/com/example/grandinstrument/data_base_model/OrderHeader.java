@@ -5,17 +5,12 @@ import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.RemoteException;
-import android.provider.BaseColumns;
 import android.util.Log;
 import android.widget.Toast;
-
-import androidx.exifinterface.media.ExifInterface;
 
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.utils.DataBaseContract;
@@ -280,11 +275,96 @@ public class OrderHeader {
 
              }
          }
+
+        deleteUploadedOrders(context);
         return false;
 
 
-
      }
+
+    private void deleteUploadedOrders(Context context) {
+        Toast.makeText(context,"Начало удаления переданных заказов",Toast.LENGTH_LONG).show();
+        String error = "";
+        DeleteUploadedOrdersNext deleteUploadedOrdersNext = new DeleteUploadedOrdersNext(Utils.mainContext,error);
+        deleteUploadedOrdersNext.execute();
+
+    }
+
+    private class DeleteUploadedOrdersNext extends AsyncTask<String, Void, Void> {
+        private ProgressDialog mProgressDialog;
+
+        private Context mContext;
+        private String error = "";
+
+        public DeleteUploadedOrdersNext(Context context, String error) {
+            this.mContext = context;
+            this.error  = error;
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            ContentResolver contentResolver = mContext.getContentResolver();
+
+            ArrayList<ContentProviderOperation> list = new
+                    ArrayList<ContentProviderOperation>();
+
+            Cursor cursorH = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,DataBaseContract.R_ORDER_HEADER.ORDER_HEADER_COLUMNS,
+                    DataBaseContract.R_ORDER_HEADER.RH_STATUS +"=?", new String[]{DataBaseContract.STATUS_UPLOADED},null );
+
+            for (int i=0; i<cursorH.getCount(); i++){
+                cursorH.moveToPosition(i);
+                String uuid = cursorH.getString(cursorH.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_UUID));
+
+                list.add(ContentProviderOperation.
+                     newDelete(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER).withSelection(DataBaseContract.R_ORDER_HEADER.RH_UUID+ " = ?", new String[]{uuid}).build());
+
+                list.add(ContentProviderOperation.
+                        newDelete(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER).withSelection(DataBaseContract.R_ORDER_ROW.R_UUID+ " = ?", new String[]{uuid}).build());
+
+            }
+
+            try {
+                contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
+                Utils.curClient = null;
+                Utils.curOrder = null;
+                contentResolver.notifyChange(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,null);
+
+            } catch (RemoteException e) {
+                e.printStackTrace();
+                error = error + "\n" + e.getMessage();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+                error = error + "\n" + e.getMessage();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = ProgressDialog.show(mContext, "Удаление заказов", "Удаляем отправленные заказы...");
+            mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
+            mProgressDialog.setCancelable(true);
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+            }
+
+            if (error.isEmpty()){
+                Toast.makeText(mContext,"Переданные заказы удалены.",Toast.LENGTH_LONG).show();
+            }else{
+                Toast.makeText(mContext,"Ошибка удаления заказов." + error,Toast.LENGTH_LONG).show();
+            }
+
+
+        }
+    }
 
     public void loadOrderToCart(Context context) {
 
@@ -484,6 +564,10 @@ public class OrderHeader {
                 try {
                     String Number_1c = jsonObject.getString("Number_1c");
                     setOrder_number_1c(Number_1c);
+                    setOrder_status(DataBaseContract.STATUS_UPLOADED);
+                    OrderHeader.SaveOrderToBase(OrderHeader.this,Utils.mainContext.getContentResolver(),error);
+
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                     error = e.getMessage();
@@ -514,21 +598,20 @@ public class OrderHeader {
             }
 
             if (error != null && !error.isEmpty()){
-                Utils.showAlert(mContext,"Ошибка выгрузки заказа", error,"Ok");
+                Utils.showAlert(Utils.mainContext,"Ошибка выгрузки заказа", error,"Ok");
                 //makeText(mContext,error, Toast.LENGTH_LONG).show();
             }else{
-                Utils.showAlert(mContext,"Выгрузка заказа", OrderHeader.this.toString() + "\n Выгружен успешно.","Ok");
-                setOrder_status("Выгружен");
-                OrderHeader.SaveOrderToBase(OrderHeader.this,mContext.getContentResolver(),error);
+                Utils.showAlert(Utils.mainContext,"Выгрузка заказа", OrderHeader.this.toString() + "\n Выгружен успешно.","Ok");
 
-                OrderActivity orderActivity = (OrderActivity)mContext;
-                orderActivity.fillHeaderOnForm();
+//
+//                OrderActivity orderActivity = (OrderActivity)mContext;
+//                orderActivity.fillHeaderOnForm();
 
             }
 
-            if (mProgressDialog != null) {
-                mProgressDialog.dismiss();
-            }
+//            if (mProgressDialog != null) {
+//                mProgressDialog.dismiss();
+//            }
 
         }
     }

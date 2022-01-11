@@ -708,7 +708,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         }
 
         saveOrder();
-
+        finish();
         orderHeader.saveOrderTo_1c(this);
 
 
