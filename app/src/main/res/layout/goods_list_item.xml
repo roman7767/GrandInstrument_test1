@@ -272,7 +272,7 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="250dp"
+                        android:layout_width="160dp"
                         android:layout_height="60dp"
                         android:orientation="horizontal">
 
@@ -347,27 +347,21 @@
                             android:id="@+id/decrease_btn"
                             android:layout_width="60dp"
                             android:layout_height="60dp"
-                            android:layout_alignParentStart="true"
+
+
                             android:layout_alignParentBottom="true"
-                            android:layout_marginStart="9dp"
-                            android:layout_marginEnd="2dp"
-                            android:layout_marginBottom="-1dp"
-                            android:layout_weight="2"
-                            android:gravity="center"
+                            android:layout_marginEnd="11dp"
+                            android:layout_marginBottom="0dp"
+                            android:layout_toStartOf="@+id/quantity_tv"
                             android:text="-" />
 
                         <TextView
                             android:id="@+id/quantity_tv"
-                            android:layout_width="77dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-
-
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="2dp"
-                            android:layout_toStartOf="@+id/increment_btn"
-                            android:layout_toLeftOf="@+id/increment_btn"
-                            android:layout_toEndOf="@+id/decrease_btn"
-                            android:layout_toRightOf="@+id/decrease_btn"
+                            android:minWidth="50dp"
+                            android:layout_centerHorizontal="true"
                             android:text="1"
                             android:textAlignment="center"
                             android:textSize="20sp" />
@@ -376,9 +370,10 @@
                             android:id="@+id/increment_btn"
                             android:layout_width="60dp"
                             android:layout_height="60dp"
-                            android:layout_alignParentEnd="true"
                             android:layout_alignParentBottom="true"
-                            android:layout_marginStart="2dp"
+                            android:layout_marginStart="22dp"
+                            android:layout_marginBottom="0dp"
+                            android:layout_toEndOf="@+id/quantity_tv"
                             android:layout_weight="2"
                             android:gravity="center|center_vertical"
                             android:text="+" />

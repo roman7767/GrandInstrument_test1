@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -15,9 +17,13 @@ import com.androidessence.recyclerviewcursoradapter.RecyclerViewCursorAdapter;
 import com.androidessence.recyclerviewcursoradapter.RecyclerViewCursorViewHolder;
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.R;
+import com.example.grandinstrument.SelectOrderModel;
 import com.example.grandinstrument.data_base_model.Client;
+import com.example.grandinstrument.data_base_model.OrderHeader;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
+
+import java.util.List;
 
 public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRecyclerViewAdapter.OrderViewHolder> {
 
@@ -50,15 +56,17 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
 
     public class OrderViewHolder extends RecyclerViewCursorViewHolder implements View.OnClickListener{
 
-        public LinearLayout ll_orders;
-        public ImageView status_iv;
-        public TextView tv_date;
-        public TextView tv_number;
-        public TextView tv_Number1c;
-        public TextView tv_NameClient;
-        public TextView tv_total;
-        public TextView tv_totalQty;
-        public TextView tv_type_of_shipment;
+        private LinearLayout ll_orders;
+        private ImageView status_iv;
+        private TextView tv_date;
+        private TextView tv_number;
+        private TextView tv_Number1c;
+        private TextView tv_NameClient;
+        private TextView tv_total;
+        private TextView tv_totalQty;
+        private TextView tv_type_of_shipment;
+        private ImageButton ibCheck;
+
 
         public OrderViewHolder(View view) {
             super(view);
@@ -75,6 +83,9 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
             tv_total = view.findViewById(R.id.tv_total);
             tv_totalQty = view.findViewById(R.id.tv_totalQty);
             tv_type_of_shipment = view.findViewById(R.id.tv_type_of_shipment);
+
+            ibCheck = view.findViewById(R.id.ibCheck);
+            ibCheck.setOnClickListener(this);
         }
 
         @Override
@@ -94,12 +105,33 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
             tv_total.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TOTAL))));
             tv_totalQty.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_QTY))));
             tv_type_of_shipment.setText(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT)));
+
+            SelectOrderModel selectOrderModel = new SelectOrderModel(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_ORDER_HEADER.RH_UUID)));
+
+
+            int curSelected = Utils.mSelectedList.indexOf(selectOrderModel);
+            if (curSelected==-1){
+                ibCheck.setImageResource(R.drawable.uncheck_box_50);
+            }else{
+                selectOrderModel = Utils.mSelectedList.get(curSelected);
+                if (selectOrderModel.isSelected()){
+                    ibCheck.setImageResource(R.drawable.checked_box_50);
+                }else{
+                    ibCheck.setImageResource(R.drawable.uncheck_box_50);
+                }
+
+            }
         }
 
         @Override
         public void onClick(View v) {
-
             int position = getAdapterPosition();
+            if (v.getId() == R.id.ibCheck){
+                selectOrder(position);
+                return;
+            }
+
+
             Cursor cursor =  mCursorAdapter.getCursor();
             if (cursor==null){
                 return;
@@ -114,6 +146,35 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
 
 
             Utils.mainContext.startActivity(intent);
+        }
+    }
+
+    private void selectOrder(int position) {
+        Cursor cursor =  mCursorAdapter.getCursor();
+        if (cursor==null){
+            return;
+        }
+
+        cursor.moveToPosition(position);
+        SelectOrderModel selectOrderModel = new SelectOrderModel(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_ORDER_HEADER.RH_UUID)));
+
+
+        int curSelected = Utils.mSelectedList.indexOf(selectOrderModel);
+        OrderHeader orderHeader = OrderHeader.loadOrderHeader(selectOrderModel.getUuid());
+        if (orderHeader.verifyOrder(Utils.mainContext)){
+            if (curSelected==-1){
+
+                    selectOrderModel.setSelected(true);
+                    Utils.mSelectedList.add(selectOrderModel);
+
+
+            }else{
+                selectOrderModel = Utils.mSelectedList.get(curSelected);
+                selectOrderModel.setSelected(!selectOrderModel.isSelected());
+            }
+
+            Utils.isCheckedOrder.setValue(true);
+            mContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,null);
         }
     }
 

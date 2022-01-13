@@ -23,6 +23,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+                <ImageButton
+                    android:id="@+id/ibCheck"
+                    android:src="@drawable/uncheck_box_50"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_vertical"/>
                 <ImageView
                     android:id="@+id/status_iv"
                     android:layout_width="30dp"

@@ -41,6 +41,7 @@ import com.example.grandinstrument.CartActivity;
 import com.example.grandinstrument.MainActivity;
 import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.R;
+import com.example.grandinstrument.SelectOrderModel;
 import com.example.grandinstrument.data_base_adapter.DataBaseHandler;
 import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.Goods;
@@ -67,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +98,9 @@ public class Utils {
     public static MutableLiveData<Boolean> isLoadGoods;
 
     public static OrderHeader curOrder;
+
+    public static List<SelectOrderModel> mSelectedList;
+    public static MutableLiveData<Boolean> isCheckedOrder;
 
 
 

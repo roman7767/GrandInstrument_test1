@@ -239,7 +239,7 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
         final EditText etQty = new EditText(Utils.mainContext);
         etQty.setInputType(InputType.TYPE_CLASS_NUMBER);
         etQty.setHint("Введите количество");
-        etQty.setText(curQty=="0"?"":curQty);
+        etQty.setText(curQty.toString().equals("0")?"":curQty);
         etQty.setFocusable(true);
         etQty.setFocusableInTouchMode(true);
         etQty.requestFocus();

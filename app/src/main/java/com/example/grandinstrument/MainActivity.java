@@ -129,6 +129,15 @@ public class MainActivity extends AppCompatActivity  {
 
         };
 
+        if (Utils.mSelectedList == null){
+            Utils.mSelectedList = new ArrayList<>();
+        }
+
+        if (Utils.isCheckedOrder == null){
+            Utils.isCheckedOrder = new MutableLiveData<>();
+            Utils.isCheckedOrder.setValue(false);
+        }
+
         Utils.mCurCartQty.observe(this,new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
@@ -212,6 +221,7 @@ public class MainActivity extends AppCompatActivity  {
         if (Utils.mCurCartQty != null && Utils.curClient == null){
             Utils.setupClientFromCart();
         }
+
 
         setTitleActivity();
     }

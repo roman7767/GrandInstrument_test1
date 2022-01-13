@@ -251,7 +251,7 @@ public class OrderHeader {
     }
 
 
-     public boolean saveOrderTo_1c(Context context){
+    public boolean saveOrderTo_1c(Context context){
          ContentResolver contentResolver = context.getContentResolver();
          Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS, DataBaseContract.R_ORDER_ROW.R_UUID + "=?",
                  new String[]{uuid},null);
@@ -275,8 +275,6 @@ public class OrderHeader {
 
              }
          }
-
-        deleteUploadedOrders(context);
         return false;
 
 
@@ -362,7 +360,6 @@ public class OrderHeader {
                 Toast.makeText(mContext,"Ошибка удаления заказов." + error,Toast.LENGTH_LONG).show();
             }
 
-
         }
     }
 
@@ -418,12 +415,9 @@ public class OrderHeader {
         private String error = "";
         private ArrayList< HashMap<String,String>> data;
 
-
-
         public static final String REQUEST_METHOD = "POST";
         public static final int READ_TIMEOUT = 150000;
         public static final int CONNECTION_TIMEOUT = 150000;
-
 
         public SaveOrderTo_1c(Context context, ArrayList< HashMap<String,String>> data, String error) {
             this.mContext = context;
@@ -472,7 +466,10 @@ public class OrderHeader {
                     requestObject.put("UID",getUuid());
                     requestObject.put("Number",getId());
                     //requestObject.put("Comment", URLEncoder.encode(getComment(), "UTF-16"));
-                    requestObject.put("Comment", URLEncoder.encode(getComment().replace(' ','~'),"UTF-8"));
+                    if (getComment() != null){
+                        requestObject.put("Comment", URLEncoder.encode(getComment().replace(' ','~'),"UTF-8"));
+                    }
+
                     requestObject.put("dispatch_method",getType_of_shipment_code());
                     requestObject.put("dateOfDelivery",getDelivery_date());
                 } catch (JSONException e) {
@@ -588,8 +585,6 @@ public class OrderHeader {
             mProgressDialog.setCancelable(true);
         }
 
-
-
         @Override
         protected void onPostExecute(Void result) {
             if (this.isCancelled()) {
@@ -597,23 +592,49 @@ public class OrderHeader {
                 return;
             }
 
+            if (mProgressDialog != null){
+                try {
+                    mProgressDialog.dismiss();
+                }catch(Exception e){
+
+                }
+
+            }
+
             if (error != null && !error.isEmpty()){
                 Utils.showAlert(Utils.mainContext,"Ошибка выгрузки заказа", error,"Ok");
                 //makeText(mContext,error, Toast.LENGTH_LONG).show();
             }else{
                 Utils.showAlert(Utils.mainContext,"Выгрузка заказа", OrderHeader.this.toString() + "\n Выгружен успешно.","Ok");
-
-//
-//                OrderActivity orderActivity = (OrderActivity)mContext;
-//                orderActivity.fillHeaderOnForm();
+                deleteUploadedOrders(Utils.mainContext);
 
             }
-
-//            if (mProgressDialog != null) {
-//                mProgressDialog.dismiss();
-//            }
-
         }
     }
 
+
+    public boolean verifyOrder(Context context){
+
+        if (getClient() == null || getClient().getApi_key() == null){
+            Utils.showAlert(context, "Ошибка сохранения заказа.","Не выбран клиент",null);
+            return false;
+        }
+
+        if (getType_of_shipment_code() == null){
+            Utils.showAlert(context, "Ошибка сохранения заказа.","Не выбран способ отправки",null);
+            return false;
+        }
+
+        ContentResolver contentResolver = Utils.mainContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER, DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,DataBaseContract.R_ORDER_ROW.R_UUID + "=?",new String[]{uuid},null);
+
+        if (cursor.getCount() == 0){
+            Utils.showAlert(context, "Ошибка сохранения заказа.","Заказ не содержит товаров.",null);
+            return false;
+        }
+
+
+        return true;
+
+    }
 }

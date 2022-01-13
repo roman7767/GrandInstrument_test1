@@ -689,27 +689,13 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
     private void saveOrderTo_1c() {
         setTypeOfShipmentToHeader();
 
-        if (orderHeader.getClient() == null || orderHeader.getClient().getApi_key() == null){
-            Utils.showAlert(this, "Ошибка сохранения заказа.","Не выбран клиент",null);
-            return;
+
+        if (orderHeader.verifyOrder(this)){
+            saveOrder();
+            finish();
+            orderHeader.saveOrderTo_1c(Utils.mainContext);
         }
 
-        if (orderHeader.getType_of_shipment_code() == null){
-            Utils.showAlert(this, "Ошибка сохранения заказа.","Не выбран способ отправки",null);
-            return;
-        }
-
-        ContentResolver contentResolver = getContentResolver();
-        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER, DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,DataBaseContract.R_ORDER_ROW.R_UUID + "=?",new String[]{uuid},null);
-
-        if (cursor.getCount() == 0){
-            Utils.showAlert(this, "Ошибка сохранения заказа.","Заказ не содержит товаров.",null);
-            return;
-        }
-
-        saveOrder();
-        finish();
-        orderHeader.saveOrderTo_1c(this);
 
 
     }

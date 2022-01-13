@@ -9,7 +9,9 @@ import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -184,6 +186,24 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
             }
         });
 
+        etSeek.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                processingSeek();
+                etSeek.requestFocus();
+            }
+        });
+
 
         etSeekBrand.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -196,6 +216,27 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
                     }
                 }
                 return false;
+            }
+        });
+
+        etSeekBrand.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                ///if (etSeekBrand.getText().toString().length()>2){
+                    processingSeek();
+                    etSeekBrand.requestFocus();
+                //}
+
             }
         });
 
