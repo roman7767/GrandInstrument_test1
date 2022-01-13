@@ -101,6 +101,8 @@ public class Utils {
 
     public static List<SelectOrderModel> mSelectedList;
     public static MutableLiveData<Boolean> isCheckedOrder;
+    public static String mMessage = "";
+
 
 
 
@@ -590,6 +592,14 @@ public class Utils {
             curQty = cursor.getInt(cursor.getColumnIndexOrThrow(DataBaseContract.R_CART.RC_QTY));
 
             if (value < 0 && curQty==0){
+                mCurCartQty.setValue(getQtyInCart());
+                if (mCurSumCart != null){
+                    mCurSumCart.setValue(getSumCart());
+                }
+
+
+                mainContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
+
                 return;
             }
             if (setDirectly){
@@ -646,13 +656,19 @@ public class Utils {
         //String[] columns = new String[] { "sum(" + DataBaseContract.R_CART.RC_QTY + ")" };
 
         int qty = 0;
-        String[] columns = new String[] { DataBaseContract.R_CART.RC_GOOD_GUID_1C };
+        String[] columns = new String[] { DataBaseContract.R_CART.RC_GOOD_GUID_1C, DataBaseContract.R_CART.RC_QTY };
         ContentResolver contentResolver = mainContext.getContentResolver();
         Cursor cursorTotal = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,columns,null,null);
-        qty = cursorTotal.getCount();
-//        cursorTotal.moveToFirst();
-//        qty= (int) (qty + cursorTotal.getDouble(0));
 
+        for (int i=0; i<cursorTotal.getCount(); i++){
+            cursorTotal.moveToPosition(i);
+
+            if (cursorTotal.getInt(cursorTotal.getColumnIndex(DataBaseContract.R_CART.RC_QTY )) !=0){
+                qty++;
+            }
+        }
+
+       // qty = cursorTotal.getCount();
         return  qty;
     }
 
@@ -833,10 +849,9 @@ public class Utils {
         builder.show();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.R)
     public static void setValueInCart(ContentValues contentValues) {
         ContentResolver contentResolver = mainContext.getContentResolver();
-        contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,null);
+        contentResolver.update(DataBaseContract.BASE_CONTENT_URI_CART,contentValues,null, null);
     }
 
     public static Object getValueFromCart(String nameColumn) {
@@ -901,7 +916,7 @@ public class Utils {
 
     private static void addAllDiscountGoods_next() {
         ContentResolver contentResolver = mainContext.getContentResolver();
-        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_GOODS,DataBaseContract.R_GOODS.GOODS_COLUMNS_FOR_LIST,DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK +"= true", null,null);
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_GOODS,DataBaseContract.R_GOODS.GOODS_COLUMNS_FOR_LIST,DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK +"=?", new String[]{"1"},null);
 
 
 
@@ -951,12 +966,23 @@ public class Utils {
             }
 
         }
+        if (Utils.curClient != null){
+            Utils.loadPriceForCart(mainContext);
+        }
+
+
         mCurCartQty.setValue(getQtyInCart());
         if (mCurSumCart != null){
             mCurSumCart.setValue(getSumCart());
         }
 
         mainContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
+
+    }
+
+    public static String fix_date(String s) {
+        s="0"+s;
+        return s.length() > 2 ? s.substring(s.length() - 2) : s;
 
     }
 

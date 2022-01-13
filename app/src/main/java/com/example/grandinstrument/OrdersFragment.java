@@ -169,6 +169,7 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
         ContentResolver contentResolver = mContext.getContentResolver();
 
         int qtyUploaded = 0;
+        Utils.mMessage = "";
 
         for (int i=0; i<Utils.mSelectedList.size(); i++){
             SelectOrderModel selectOrderModel = Utils.mSelectedList.get(i);
@@ -176,7 +177,7 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
             if (selectOrderModel.isSelected()){
                 OrderHeader orderHeader = OrderHeader.loadOrderHeader(selectOrderModel.getUuid());
                 String errors = "";
-                orderHeader.saveOrderTo_1c(mContext);
+                orderHeader.saveOrderTo_1c(mContext,i==Utils.mSelectedList.size()-1?false:true);
                 if (!errors.equals("")){
                     Toast.makeText(mContext,errors,Toast.LENGTH_LONG).show();
                 }else{

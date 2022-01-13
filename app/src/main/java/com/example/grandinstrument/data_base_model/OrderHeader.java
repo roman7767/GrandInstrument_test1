@@ -12,7 +12,6 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.grandinstrument.OrderActivity;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
 
@@ -251,7 +250,7 @@ public class OrderHeader {
     }
 
 
-    public boolean saveOrderTo_1c(Context context){
+    public boolean saveOrderTo_1c(Context context, boolean withoutDialog){
          ContentResolver contentResolver = context.getContentResolver();
          Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER,DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS, DataBaseContract.R_ORDER_ROW.R_UUID + "=?",
                  new String[]{uuid},null);
@@ -270,7 +269,7 @@ public class OrderHeader {
 
              if (data.size() > 0){
 
-                 SaveOrderTo_1c saveOrderTo_1c = new SaveOrderTo_1c(context,data, error);
+                 SaveOrderTo_1c saveOrderTo_1c = new SaveOrderTo_1c(context,data, error, withoutDialog);
                  saveOrderTo_1c.execute();
 
              }
@@ -414,15 +413,17 @@ public class OrderHeader {
         private Context mContext;
         private String error = "";
         private ArrayList< HashMap<String,String>> data;
+        private boolean withoutDialog = false;
 
         public static final String REQUEST_METHOD = "POST";
         public static final int READ_TIMEOUT = 150000;
         public static final int CONNECTION_TIMEOUT = 150000;
 
-        public SaveOrderTo_1c(Context context, ArrayList< HashMap<String,String>> data, String error) {
+        public SaveOrderTo_1c(Context context, ArrayList< HashMap<String,String>> data, String error,boolean withoutDialog) {
             this.mContext = context;
             this.data  = data;
             this.error  = error;
+            this.withoutDialog = withoutDialog;
         }
 
         @Override
@@ -534,6 +535,7 @@ public class OrderHeader {
 
             try {
                 success = (boolean) jsonObject.getBoolean("success");
+                Utils.mMessage = Utils.mMessage + (Utils.mMessage.length()==0?"":"\n")+OrderHeader.this.toString()+"Выгружен успешно.";
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -602,10 +604,13 @@ public class OrderHeader {
             }
 
             if (error != null && !error.isEmpty()){
-                Utils.showAlert(Utils.mainContext,"Ошибка выгрузки заказа", error,"Ok");
+                Utils.showAlert(Utils.mainContext,"Ошибка выгрузки заказа" + mContext.toString(), error,"Ok");
                 //makeText(mContext,error, Toast.LENGTH_LONG).show();
             }else{
-                Utils.showAlert(Utils.mainContext,"Выгрузка заказа", OrderHeader.this.toString() + "\n Выгружен успешно.","Ok");
+                if (!withoutDialog){
+                    Utils.showAlert(Utils.mainContext,"Выгрузка заказа(ов)",  Utils.mMessage ,"Ok");
+                }
+
                 deleteUploadedOrders(Utils.mainContext);
 
             }

@@ -77,6 +77,10 @@ public class MainActivity extends AppCompatActivity  {
     private LinearLayout ll_show_client;
     String titleActivity;
 
+    public ViewPager getViewPager() {
+        return viewPager;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,9 +112,9 @@ public class MainActivity extends AppCompatActivity  {
                     }
                 };
 
-        //*********************
-        Utils.curUser = User.getUserByEmail("e@e.com", this);
-        //*********************
+//        //*********************
+//        Utils.curUser = User.getUserByEmail("e@e.com", this);
+//        //*********************
 
         if (Utils.mStatuses == null){
             Utils.mStatuses = getResources().getStringArray( R.array.statuses_of_order);

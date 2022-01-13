@@ -185,7 +185,7 @@ public class DataBaseHandler extends SQLiteOpenHelper {
                     DataBaseContract.R_GOODS.RG_ID_1C+" text, "+
                     DataBaseContract.R_GOODS.RG_CODE_1C+" text, "+
                     DataBaseContract.R_GOODS.RG_ARTICLE+" text, "+
-                    DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK+" booen, "+
+                    DataBaseContract.R_GOODS.RG_GOOD_OF_WEEK+" boolen, "+
                     DataBaseContract.R_GOODS.RG_DESCRIPTION+" text, "+
                     DataBaseContract.R_GOODS.RG_BRAND+" text, "+
                     DataBaseContract.R_GOODS.RG_CATEGORY+" text, "+

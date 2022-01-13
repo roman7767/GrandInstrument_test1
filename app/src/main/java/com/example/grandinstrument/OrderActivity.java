@@ -25,7 +25,6 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -37,12 +36,10 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Header;
 import com.example.grandinstrument.adapters.OrderRowRecyclerViewAdapter;
 import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.OrderHeader;
@@ -275,9 +272,9 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
                             public void onDateSet(DatePicker view, int year,
                                                   int monthOfYear, int dayOfMonth) {
                                 // set day of month , month and year value in the edit text
-                                String dateOfDelivery = dayOfMonth + "." + (monthOfYear + 1) + "." + year;
-                                etDateOfDelivery.setText(dateOfDelivery);
-                                orderHeader.setDelivery_date(dateOfDelivery);
+                                String textDate = Utils.fix_date(String.valueOf(dayOfMonth)) + "." + Utils.fix_date(String.valueOf((monthOfYear + 1)))+ "." + year;
+                                etDateOfDelivery.setText(textDate);
+                                orderHeader.setDelivery_date(textDate);
 
                             }
                         }, mYear, mMonth, mDay);
@@ -295,10 +292,19 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             final android.app.AlertDialog dialog;
             dialog = new android.app.AlertDialog.Builder(this)
                     .setTitle("Внимание!!!")
-                    .setMessage("Внимание корзина содержит товары, сохраните/очистите товары в корзине перед редактророванием  заказа.")
-                    .setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                    .setMessage("Внимание корзина содержит товары, для продолжения необходимо очистить корзину.\n Очистить товары в корзине?.")
+                    .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
                             dialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Utils.clearTable(DataBaseContract.CART_TABLE_NAME);
+                            orderHeader.loadOrderToCart(getBaseContext());
+                            finish();
+                            ((MainActivity)Utils.mainContext).getViewPager().setCurrentItem(1);
                         }
                     })
                     .setCancelable(true)
@@ -310,6 +316,8 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
         orderHeader.loadOrderToCart(this);
         finish();
+        ((MainActivity)Utils.mainContext).getViewPager().setCurrentItem(1);
+
 
     }
 
@@ -317,7 +325,8 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
 
         final EditText txtCodeClient = new EditText(this);
         txtCodeClient.setHint("");
-       // txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
+        txtCodeClient.setSingleLine();
+        txtCodeClient.requestFocus();
 
 
         final android.app.AlertDialog dialog;
@@ -693,7 +702,7 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
         if (orderHeader.verifyOrder(this)){
             saveOrder();
             finish();
-            orderHeader.saveOrderTo_1c(Utils.mainContext);
+            orderHeader.saveOrderTo_1c(Utils.mainContext, false);
         }
 
 

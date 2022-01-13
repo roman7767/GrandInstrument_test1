@@ -661,6 +661,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
                             // A null listener allows the button to dismiss the dialog and take no further action.
                             .setNegativeButton(null, null)
                             .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setCancelable(false)
                             .show();
                 }
                 break;

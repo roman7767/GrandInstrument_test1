@@ -2,6 +2,7 @@ package com.example.grandinstrument;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
@@ -24,6 +25,7 @@ import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.text.InputFilter;
@@ -185,7 +187,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
                             public void onDateSet(DatePicker view, int year,
                                                   int monthOfYear, int dayOfMonth) {
                                 // set day of month , month and year value in the edit text
-                                String textDate = dayOfMonth + "." + (monthOfYear + 1) + "." + year;
+                                String textDate = Utils.fix_date(String.valueOf(dayOfMonth)) + "." + Utils.fix_date(String.valueOf((monthOfYear + 1)))+ "." + year;
                                 etDateOfDelivery.setText(textDate);
 
                                 ContentValues contentValues = new ContentValues();
@@ -216,7 +218,9 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
 
         final EditText txtCodeClient = new EditText(this);
         txtCodeClient.setHint("");
-        //txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
+        //txtCodeClient.setInputType(InputType.TYPE_CLASS_TEXT);
+        txtCodeClient.setSingleLine();
+        txtCodeClient.requestFocus();
 
 
         final android.app.AlertDialog dialog;
