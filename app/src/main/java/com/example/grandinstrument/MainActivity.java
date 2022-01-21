@@ -112,9 +112,9 @@ public class MainActivity extends AppCompatActivity  {
                     }
                 };
 
-//        //*********************
-//        Utils.curUser = User.getUserByEmail("e@e.com", this);
-//        //*********************
+        //*********************
+        Utils.curUser = User.getUserByEmail("e@e.com", this);
+        //*********************
 
         if (Utils.mStatuses == null){
             Utils.mStatuses = getResources().getStringArray( R.array.statuses_of_order);
@@ -140,6 +140,10 @@ public class MainActivity extends AppCompatActivity  {
         if (Utils.isCheckedOrder == null){
             Utils.isCheckedOrder = new MutableLiveData<>();
             Utils.isCheckedOrder.setValue(false);
+        }
+
+        if (Utils.brands == null){
+            Utils.setBrandList();
         }
 
         Utils.mCurCartQty.observe(this,new Observer<Integer>() {
@@ -457,6 +461,9 @@ public class MainActivity extends AppCompatActivity  {
 
             final EditText txtCodeClient = new EditText(this);
             txtCodeClient.setHint("");
+            txtCodeClient.setSingleLine();
+            txtCodeClient.requestFocus();
+
             //txtCodeClient.setInputType(InputType.TYPE_CLASS_NUMBER);
 
 
@@ -480,6 +487,13 @@ public class MainActivity extends AppCompatActivity  {
                 {
                     if (event.getAction() == KeyEvent.ACTION_DOWN)
                     {
+                        if (txtCodeClient.getText().toString().length() < 4){
+                            txtCodeClient.setError("Минимум 4 символа.");
+                            return false;
+                        }else {
+                            txtCodeClient.setError(null);
+
+                        }
                         switch (keyCode)
                         {
                             case KeyEvent.KEYCODE_ENTER:

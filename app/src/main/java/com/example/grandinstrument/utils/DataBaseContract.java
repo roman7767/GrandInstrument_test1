@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public final class DataBaseContract implements BaseColumns {
 
-    public static final int DATA_BASE_VERSION = 26;
+    public static final int DATA_BASE_VERSION = 28;
     public static final String DATA_BASE_NAME = "gi_mobile_base";
     public static final String GOODS_TABLE_NAME = "goods_table";
 
@@ -19,6 +19,7 @@ public final class DataBaseContract implements BaseColumns {
     public static final String ORDER_HEAD_TABLE_NAME = "order_head_table";
     public static final String ORDER_ROW_TABLE_NAME = "order_row_table";
     public static final String TYPE_OF_SHIPMENT_TABLE_NAME = "type_of_shipment_table";
+    public static final String BRANDS_TABLE_NAME = "brands_table";
 
     public static final String SCHEME = "content://";
     public static final String URI_AUTHORITY = "com.example.grandinstrument.data_base_adapter";
@@ -32,6 +33,7 @@ public final class DataBaseContract implements BaseColumns {
     public static final Uri BASE_CONTENT_URI_HEAD_ORDER = Uri.parse(BASE_CONTENT_URI+"/"+ORDER_HEAD_TABLE_NAME);
     public static final Uri BASE_CONTENT_URI_ROW_ORDER = Uri.parse(BASE_CONTENT_URI+"/"+ORDER_ROW_TABLE_NAME);
     public static final Uri BASE_CONTENT_URI_TYPE_OF_SHIPMENT = Uri.parse(BASE_CONTENT_URI+"/"+TYPE_OF_SHIPMENT_TABLE_NAME);
+    public static final Uri BASE_CONTENT_URI_BRANDS = Uri.parse(BASE_CONTENT_URI+"/"+BRANDS_TABLE_NAME);
 
 
 
@@ -51,12 +53,28 @@ public final class DataBaseContract implements BaseColumns {
             arrayList.add(ORDER_HEAD_TABLE_NAME);
             arrayList.add(ORDER_ROW_TABLE_NAME);
             arrayList.add(TYPE_OF_SHIPMENT_TABLE_NAME);
+            arrayList.add(BRANDS_TABLE_NAME);
             return arrayList;
         }
 
 
         private ALL_TABLES(){};
 
+    }
+
+    public static final class  R_BRANDS{
+        public static final String RB_KEY_ID = BaseColumns._ID;
+        public static final String RB_NAME = "name";
+
+        public static final String[] GOODS_COLUMNS_FOR_LIST = new String[] {
+                BRANDS_TABLE_NAME + "." +
+                        RB_KEY_ID,
+                        RB_NAME
+
+        };
+
+        private R_BRANDS() {
+        }
     }
 
     //columns the goods table

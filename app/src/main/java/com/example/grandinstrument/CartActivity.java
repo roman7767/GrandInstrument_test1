@@ -243,6 +243,13 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
             {
                 if (event.getAction() == KeyEvent.ACTION_DOWN)
                 {
+                    if (txtCodeClient.getText().toString().length() < 4){
+                        txtCodeClient.setError("Минимум 4 символа.");
+                        return false;
+                    }else {
+                        txtCodeClient.setError(null);
+
+                    }
                     switch (keyCode)
                     {
                         case KeyEvent.KEYCODE_ENTER:

@@ -73,6 +73,18 @@
                 android:textSize="25sp" />
 
             <Button
+                android:id="@+id/btLoadBrands"
+                android:visibility="gone"
+                android:layout_width="@dimen/width_main_button"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="10dp"
+                android:background="@drawable/button_background"
+                android:text="Загрузить бренды"
+                android:textColor="@color/grand_button"
+                android:textSize="25sp" />
+
+            <Button
                 android:id="@+id/btClearOrders"
                 android:layout_width="@dimen/width_main_button"
                 android:layout_height="wrap_content"

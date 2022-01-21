@@ -79,6 +79,8 @@ public class LoadFragment extends Fragment {
     private Button btLoadsGoods;
     private Button btLoadPicture;
 
+    private Button btLoadBrands;
+
 
 
     private ImageView tools_iv;
@@ -170,6 +172,14 @@ public class LoadFragment extends Fragment {
             @Override
             public void onClick(View v) {
                loadTypeOfShipment();
+            }
+        });
+
+        btLoadBrands = mainView.findViewById(R.id.btLoadBrands);
+        btLoadBrands.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Utils.loadBrandsTable();
             }
         });
 
@@ -550,6 +560,7 @@ public class LoadFragment extends Fragment {
     private void writeGoodsToBase() {
         if (eraseGoods){
             dbOH.clearTable(dbOH.getWritableDatabase(), DataBaseContract.GOODS_TABLE_NAME);
+            dbOH.clearTable(dbOH.getWritableDatabase(),DataBaseContract.BRANDS_TABLE_NAME);
             eraseGoods = false;
         }
 
@@ -570,6 +581,7 @@ public class LoadFragment extends Fragment {
             eraseGoods = true;
             finishLoading = false;
             tools_iv.setVisibility(View.INVISIBLE);
+            Utils.loadBrandsTable();
 
         }
     }

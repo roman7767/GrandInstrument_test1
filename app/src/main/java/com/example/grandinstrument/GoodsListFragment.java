@@ -1,6 +1,5 @@
 package com.example.grandinstrument;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -15,13 +14,13 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -81,7 +80,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
     private static SearchView searchView;
     private String titleActivity;
     private EditText etSeek;
-    private EditText etSeekBrand;
+    private AutoCompleteTextView etSeekBrand;
 
     private EditText etPriceTo;
     private ImageButton ibClearSeek;
@@ -161,7 +160,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
         etSeek =  mainView.findViewById(R.id.etSeek);
 
 
-        etSeekBrand = mainView.findViewById(R.id.etSeekBrand);
+
         etPriceTo = mainView.findViewById(R.id.etPriceTo);
 
         adapter = new GoodsRecyclerViewCursorAdapter(mContext);
@@ -199,11 +198,20 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
 
             @Override
             public void afterTextChanged(Editable s) {
+                if (etSeek.getText().toString().length() < 4){
+                    return;
+                }
                 processingSeek();
                 etSeek.requestFocus();
             }
         });
 
+        ArrayAdapter<String> adapterBrands = new ArrayAdapter<String>(getActivity(), android.R.layout.select_dialog_item,Utils.brands);
+        etSeekBrand = mainView.findViewById(R.id.etSeekBrand);
+        //Set the number of characters the user must type before the drop down list is shown
+        etSeekBrand.setThreshold(1);
+        //Set the adapter
+        etSeekBrand.setAdapter(adapterBrands);
 
         etSeekBrand.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -218,7 +226,6 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
                 return false;
             }
         });
-
         etSeekBrand.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -232,10 +239,12 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
 
             @Override
             public void afterTextChanged(Editable s) {
-                ///if (etSeekBrand.getText().toString().length()>2){
+                if (etSeekBrand.getText().toString().length() < 3){
+                    return;
+                }
                     processingSeek();
                     etSeekBrand.requestFocus();
-                //}
+
 
             }
         });

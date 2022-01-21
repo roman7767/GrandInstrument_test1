@@ -349,6 +349,13 @@ public class OrderActivity extends AppCompatActivity implements LoaderManager.Lo
             {
                 if (event.getAction() == KeyEvent.ACTION_DOWN)
                 {
+                    if (txtCodeClient.getText().toString().length() < 4){
+                        txtCodeClient.setError("Минимум 4 символа.");
+                        return false;
+                    }else {
+                        txtCodeClient.setError(null);
+
+                    }
                     switch (keyCode)
                     {
                         case KeyEvent.KEYCODE_ENTER:

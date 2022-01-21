@@ -19,6 +19,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.RemoteException;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -102,6 +103,7 @@ public class Utils {
     public static List<SelectOrderModel> mSelectedList;
     public static MutableLiveData<Boolean> isCheckedOrder;
     public static String mMessage = "";
+    public static String [] brands;
 
 
 
@@ -983,6 +985,50 @@ public class Utils {
     public static String fix_date(String s) {
         s="0"+s;
         return s.length() > 2 ? s.substring(s.length() - 2) : s;
+
+    }
+
+    public static void loadBrandsTable() {
+
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_GOODS,new String[]{"Distinct "+DataBaseContract.R_GOODS.RG_BRAND},
+                null,null ,DataBaseContract.R_GOODS.RG_BRAND);
+
+        contentResolver.delete(DataBaseContract.BASE_CONTENT_URI_BRANDS,null,null);
+        for (int i=0;i<cursor.getCount(); i++){
+            cursor.moveToPosition(i);
+
+            String name = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_BRAND));
+            if (name.trim().equals("")){
+                continue;
+            }
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(DataBaseContract.R_BRANDS.RB_NAME,name);
+            contentResolver.insert(DataBaseContract.BASE_CONTENT_URI_BRANDS,contentValues);
+        }
+    }
+
+    public static void setBrandList() {
+
+        ContentResolver contentResolver = mainContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_BRANDS, DataBaseContract.R_BRANDS.GOODS_COLUMNS_FOR_LIST,
+                null,null ,DataBaseContract.R_BRANDS.RB_NAME);
+
+        if (cursor.getCount() == 0){
+            Utils.brands = new String[]{};
+            return;
+        }
+        Utils.brands = new String[cursor.getCount()];
+
+
+        for (int i=0;i<cursor.getCount(); i++){
+
+            cursor.moveToPosition(i);
+
+            String name = cursor.getString(cursor.getColumnIndex(DataBaseContract.R_BRANDS.RB_NAME));
+            Utils.brands[i] = name;
+
+        }
 
     }
 

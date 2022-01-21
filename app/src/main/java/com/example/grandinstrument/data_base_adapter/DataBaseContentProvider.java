@@ -39,6 +39,9 @@ public class DataBaseContentProvider extends ContentProvider {
 
         uriMatcher.addURI(DataBaseContract.URI_AUTHORITY, DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME, DataBaseContract.URI_CODE_ALL_TABLE);
         uriMatcher.addURI(DataBaseContract.URI_AUTHORITY, DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME+"/#", DataBaseContract.URI_CODE_ONE_ROW);
+
+        uriMatcher.addURI(DataBaseContract.URI_AUTHORITY, DataBaseContract.BRANDS_TABLE_NAME, DataBaseContract.URI_CODE_ALL_TABLE);
+        uriMatcher.addURI(DataBaseContract.URI_AUTHORITY, DataBaseContract.BRANDS_TABLE_NAME+"/#", DataBaseContract.URI_CODE_ONE_ROW);
     }
 
     @Override

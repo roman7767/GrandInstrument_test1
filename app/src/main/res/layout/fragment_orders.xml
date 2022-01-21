@@ -70,7 +70,7 @@
             android:clickable="true"
             android:keyboardNavigationCluster="true"
             android:linksClickable="true"
-            android:text="Передать"
+            android:text="Выгрузить заказы"
             android:textSize="16sp" />
 
         <Button

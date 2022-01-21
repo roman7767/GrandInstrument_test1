@@ -29,6 +29,7 @@ public class DataBaseHandler extends SQLiteOpenHelper {
             listOfTable.add(DataBaseContract.ORDER_HEAD_TABLE_NAME);
             listOfTable.add(DataBaseContract.ORDER_ROW_TABLE_NAME);
             listOfTable.add(DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME);
+            listOfTable.add(DataBaseContract.BRANDS_TABLE_NAME);
         }
 
         for (int i = 0; i<listOfTable.size(); i++){
@@ -57,6 +58,24 @@ public class DataBaseHandler extends SQLiteOpenHelper {
             if (s == DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME){
                 createTableTypeOfShipment(db);
             }
+
+            if (s == DataBaseContract.BRANDS_TABLE_NAME){
+                createTableBrands(db);
+            }
+        }
+    }
+
+    private boolean createTableBrands(SQLiteDatabase db) {
+        try {
+            String CREATE_BRANDS = "create table "+ DataBaseContract.BRANDS_TABLE_NAME+
+                    "("+ DataBaseContract.R_BRANDS.RB_KEY_ID+" integer primary key, "+
+                    DataBaseContract.R_BRANDS.RB_NAME+" text)";
+
+            db.execSQL(CREATE_BRANDS);
+            return true;
+        }catch(Error e){
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -160,6 +179,10 @@ public class DataBaseHandler extends SQLiteOpenHelper {
 
             if (!tableExists(db, DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME)){
                 listOfTable.add(DataBaseContract.TYPE_OF_SHIPMENT_TABLE_NAME);
+            }
+
+            if (!tableExists(db, DataBaseContract.BRANDS_TABLE_NAME)){
+                listOfTable.add(DataBaseContract.BRANDS_TABLE_NAME);
             }
 
 
