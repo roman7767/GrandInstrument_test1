@@ -149,12 +149,13 @@
                             android:minWidth="80dp"
                             android:textSize="20sp" />
                     </LinearLayout>
+
                     <Button
                         android:id="@+id/btAddAllDiscountGoods"
-                        android:textSize="20sp"
-                        android:text="Добавить товары недели в заказ"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:text="Добавить товары недели в заказ"
+                        android:textSize="20sp" />
                 </LinearLayout>
 
                 <ImageButton
@@ -162,10 +163,10 @@
                     android:layout_width="60dp"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
+                    android:focusableInTouchMode="true"
                     android:onClick="onClick_ibClearSeek"
                     android:src="@drawable/ic_baseline_clear_24"
                     android:visibility="visible"
-                    android:focusableInTouchMode="true"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="parent" />
@@ -194,6 +195,8 @@
         app:layout_constraintVertical_bias="0.0">
 
     </androidx.recyclerview.widget.RecyclerView>
+
+
 
     <TextView
         android:id="@+id/tv_Phone"

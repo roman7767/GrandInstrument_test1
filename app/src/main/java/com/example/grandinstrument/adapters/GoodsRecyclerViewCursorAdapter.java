@@ -1,5 +1,7 @@
 package com.example.grandinstrument.adapters;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -7,18 +9,24 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.AsyncTask;
+import android.provider.ContactsContract;
 import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -27,25 +35,31 @@ import com.android.volley.toolbox.Volley;
 import com.androidessence.recyclerviewcursoradapter.RecyclerViewCursorAdapter;
 import com.androidessence.recyclerviewcursoradapter.RecyclerViewCursorViewHolder;
 import com.example.grandinstrument.GoodsActivity;
+import com.example.grandinstrument.GoodsListFragment;
 import com.example.grandinstrument.R;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
 
 import org.json.JSONException;
 
+import java.util.concurrent.TimeUnit;
+
 public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<GoodsRecyclerViewCursorAdapter.GoodsViewHolder> {
 
 
     private Context context;
     private RequestQueue requestQueue;
+    public boolean stopAddingGoods = false;
+    private LinearLayout llAddGoodsByMeasurement;
 
 
-    public GoodsRecyclerViewCursorAdapter(Context context) {
+    public GoodsRecyclerViewCursorAdapter(Context context, LinearLayout llAddGoodsByMeasurement) {
         super(context);
         this.context = context;
 
         setupCursorAdapter(null, 0, R.layout.goods_list_item, false);
         requestQueue = Volley.newRequestQueue(Utils.mainContext);
+        this.llAddGoodsByMeasurement = llAddGoodsByMeasurement;
     }
 
     @Override
@@ -85,7 +99,7 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
         private RelativeLayout rlBox;
         private RelativeLayout rlPackage;
 
-
+        @SuppressLint("ClickableViewAccessibility")
         public GoodsViewHolder(View view) {
             super(view);
             goods_iv = view.findViewById(R.id.goods_iv);
@@ -111,11 +125,170 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             tvInBox = view.findViewById(R.id.tvInBox);
             tvInPackage = view.findViewById(R.id.tvInPackage);
 
+
             rlBox = view.findViewById(R.id.rlBox);
+            rlBox.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+
+
+                            startAddingGoods("box", getAdapterPosition());
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP: {
+                            stopAddingGoods();
+                        }
+                    }
+                    return true;
+                }
+            });
             rlPackage = view.findViewById(R.id.rlPackage);
+            rlPackage.setOnTouchListener(new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_DOWN: {
+                            startAddingGoods("package", getAdapterPosition());
+                            break;
+                        }
+                        case MotionEvent.ACTION_UP: {
+                            stopAddingGoods();
+                        }
+                    }
+                    return true;
+                }
+            });
 
         }
 
+        private void startAddingGoods(String measurement, int adapterPosition) {
+            llAddGoodsByMeasurement.setVisibility(View.VISIBLE);
+            RelativeLayout relativeLayout = llAddGoodsByMeasurement.findViewById(R.id.rlAddGoodsByMeasurement);
+            ProgressBar progressBar = relativeLayout.findViewById(R.id.pbAddGoodsByMeasurement);
+            TextView tvProgressBar = relativeLayout.findViewById(R.id.tvProgressBar);
+
+            int sec = 2;
+            stopAddingGoods = false;
+
+            progressBar.setMin(0);
+            progressBar.setMax(sec);
+            progressBar.setProgress(0);
+
+
+            AddingGoodsNext addingGoodsNext = new AddingGoodsNext(mContext,progressBar, tvProgressBar ,adapterPosition, measurement,sec);
+            addingGoodsNext.execute();
+        }
+
+        private void stopAddingGoods() {
+            stopAddingGoods = true;
+            llAddGoodsByMeasurement.setVisibility(View.GONE);
+
+        }
+
+        private void addGoodsByMeasurement(String measurement, int position) {
+
+            if (stopAddingGoods)return;
+
+            stopAddingGoods();
+
+            Cursor cursor = mCursorAdapter.getCursor();
+            cursor.moveToPosition(position);
+
+            int qty=0;
+            if (measurement.equals("box")){
+                qty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_BOX));
+            }else{
+                qty = cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_PACKAGE));
+            }
+
+            if (qty==0){
+                return;
+            }
+
+            double price  = cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_RRC));
+            if (Utils.curClient!=null){
+                price  = cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_PRICE));
+            }
+
+
+            Utils.setCartChange(qty,cursor.getString(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_ID_1C)),
+                    price,false);
+
+            Toast.makeText(Utils.mainContext,"Добавлено в корзину "+qty+" "+cursor.getString(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_DESCRIPTION)),Toast.LENGTH_LONG).show();
+        }
+
+        private void changeProgressBar(ProgressBar mProgressBar,TextView tvProgressBar,int i, int position) {
+            mProgressBar.setProgress(mProgressBar.getProgress()+i);
+
+            Cursor cursor = mCursorAdapter.getCursor();
+            if (cursor == null){
+                stopAddingGoods();
+                return;
+            }
+            cursor.moveToPosition(position);
+
+            String text = "Добавление "+cursor.getString(cursor.getColumnIndex(DataBaseContract.R_GOODS.RG_ARTICLE))+" "+mProgressBar.getProgress()+"/"+mProgressBar.getMax();
+
+            setText(tvProgressBar, text);
+        }
+
+        private void setText(final TextView text,final String value){
+            ((Activity)mContext).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    text.setText(value);
+                }
+            });
+        }
+
+        class AddingGoodsNext extends AsyncTask<Void, Void, Void> {
+
+            private ProgressBar mProgressBar;
+            private TextView tvProgressBar;
+            private int adapterPosition;
+            private String measurement;
+            private int sec;
+            private Context mContext;
+
+            public AddingGoodsNext(Context mContext,ProgressBar mProgressBar, TextView tvProgressBar,int adapterPosition, String measurement, int sec) {
+                this.mProgressBar = mProgressBar;
+                this.adapterPosition = adapterPosition;
+                this.sec = sec;
+                this.mContext = mContext;
+                this.measurement = measurement;
+                this.tvProgressBar = tvProgressBar;
+            }
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                try {
+                    for (int i=0; i<sec;i++){
+                        if (stopAddingGoods)break;
+                        TimeUnit.SECONDS.sleep(1);
+                        changeProgressBar(mProgressBar,tvProgressBar,1,adapterPosition);
+                    }
+
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+               super.onPostExecute(result);
+               addGoodsByMeasurement(measurement, adapterPosition);
+            }
+        }
 
 
         @Override
@@ -233,6 +406,8 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
         }
     }
+
+
 
     private void inputQty(View v, String id_1c, double price, String curQty) {
 

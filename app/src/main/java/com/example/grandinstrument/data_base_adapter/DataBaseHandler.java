@@ -359,6 +359,10 @@ public class DataBaseHandler extends SQLiteOpenHelper {
                 createTableTypeOfShipment(db);
             }
 
+            if (nameTable == DataBaseContract.BRANDS_TABLE_NAME){
+                createTableBrands(db);
+            }
+
             return true;
         }catch(Error e){
             e.printStackTrace();

@@ -1,5 +1,6 @@
 package com.example.grandinstrument;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -19,11 +20,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -159,11 +162,12 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
         recyclerView = mainView.findViewById(R.id.goods_rv);
         etSeek =  mainView.findViewById(R.id.etSeek);
 
+        LinearLayout llAddGoodsByMeasurement = ((Activity)Utils.mainContext).findViewById(R.id.llAddGoodsByMeasurement);
 
 
         etPriceTo = mainView.findViewById(R.id.etPriceTo);
 
-        adapter = new GoodsRecyclerViewCursorAdapter(mContext);
+        adapter = new GoodsRecyclerViewCursorAdapter(mContext, llAddGoodsByMeasurement);
         manager = new LinearLayoutManager(mContext);
 
         recyclerView.setAdapter(adapter);
@@ -226,28 +230,43 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
                 return false;
             }
         });
-        etSeekBrand.addTextChangedListener(new TextWatcher() {
+
+
+        etSeekBrand.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (etSeekBrand.getText().toString().length() < 3){
-                    return;
-                }
-                    processingSeek();
-                    etSeekBrand.requestFocus();
-
-
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                processingSeek();
+                etSeekBrand.requestFocus();
             }
         });
+
+
+//        etSeekBrand.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//
+//
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//
+//                if (etSeekBrand.getText().toString().length() < 3){
+//                    return;
+//                }
+//                processingSeek();
+//                etSeekBrand.requestFocus();
+//
+//            }
+//        });
 
 
 
@@ -419,7 +438,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
 
     public void onClick_ibClearSeek(View view) {
         etSeek.setText(null);
-        etSeekBrand.setText(null);
+        etSeekBrand.setText("");
         etPriceTo.setText(null);
         processingSeek();
 

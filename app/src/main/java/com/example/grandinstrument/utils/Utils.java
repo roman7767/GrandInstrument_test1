@@ -623,7 +623,7 @@ public class Utils {
                 if (setDirectly){
                     curQty= value;
                 }else{
-                    curQty = 1;
+                    curQty= curQty + value;
                 }
 
                 if (curClient != null){
@@ -1009,14 +1009,21 @@ public class Utils {
     }
 
     public static void setBrandList() {
-
         ContentResolver contentResolver = mainContext.getContentResolver();
-        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_BRANDS, DataBaseContract.R_BRANDS.GOODS_COLUMNS_FOR_LIST,
+        Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_BRANDS, DataBaseContract.R_BRANDS.BRANDS_COLUMNS_FOR_LIST,
                 null,null ,DataBaseContract.R_BRANDS.RB_NAME);
 
         if (cursor.getCount() == 0){
-            Utils.brands = new String[]{};
-            return;
+
+            loadBrandsTable();
+
+            cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_BRANDS, DataBaseContract.R_BRANDS.BRANDS_COLUMNS_FOR_LIST,
+                    null,null ,DataBaseContract.R_BRANDS.RB_NAME);
+            if (cursor.getCount() == 0){
+                Utils.brands = new String[]{};
+                return;
+            }
+
         }
         Utils.brands = new String[cursor.getCount()];
 
