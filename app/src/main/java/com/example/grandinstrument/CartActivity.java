@@ -2,7 +2,6 @@ package com.example.grandinstrument;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.MutableLiveData;
@@ -16,21 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.content.ContentProviderOperation;
-import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.text.InputFilter;
-import android.text.InputType;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,30 +31,17 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.grandinstrument.adapters.CartRecyclerViewAdapter;
 import com.example.grandinstrument.data_base_model.Client;
+import com.example.grandinstrument.data_base_model.OrderHeader;
 import com.example.grandinstrument.data_base_model.TypeOfShipment;
 import com.example.grandinstrument.utils.DataBaseContract;
 import com.example.grandinstrument.utils.Utils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-
-import static android.widget.Toast.makeText;
 
 public class CartActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -86,6 +62,8 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private static String selection = "";
     private static String[] selectionArgs = new String[]{};
+
+    private Button btSaveAndSend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,7 +179,17 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
+        btSaveAndSend = findViewById(R.id.btSaveAndSend);
+        btSaveAndSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveAndSend();
+            }
+        });
+
     }
+
+
 
     private void startLoadClient(String curCode, Dialog dialog, EditText txtCodeClient){
         if (curCode.length() < 4){
@@ -358,11 +346,54 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         return true;
     }
 
+    private void saveAndSend() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Сохранить и отправить")
+                .setMessage("Сохранить коризину и отправить?");
+        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                saveAndSendNext();
+            }
+        });
+        builder.setCancelable(true);
+        builder.create();
+        builder.setNegativeButton("Нет",null);
+        builder.show();
+
+
+    }
+
+    private void saveAndSendNext() {
+        TypeOfShipment shipment = (TypeOfShipment) sTypeOfShipment.getSelectedItem();
+        boolean success = false;
+
+        if (shipment == null || shipment.getCode_1c() == null || shipment.getCode_1c().isEmpty()){
+            Utils.showAlert(this,"Сохранение.", "Не выбран способ отправки.","Ok");
+            return;
+        }
+
+        if (Utils.curClient == null|| Utils.curClient.getApi_key().isEmpty() ){
+            Utils.showAlert(this,"Сохранение.", "Не выбран клиент.","Ok");
+            return;
+        }
+        String uuid = Utils.saveCart(shipment);
+        if (uuid!=null){
+            if (!uuid.isEmpty()){
+                OrderHeader orderHeader = OrderHeader.loadOrderHeader(uuid);
+                orderHeader.saveOrderTo_1c(Utils.mainContext, false);
+                finish();
+            }
+
+        }
+
+    }
+
     public void btSaveOnClick(View view) throws OperationApplicationException {
 
         TypeOfShipment shipment = (TypeOfShipment) sTypeOfShipment.getSelectedItem();
 
-        if (Utils.saveCart(shipment)){
+        if (Utils.saveCart(shipment)!=null){
             finish();
         }
 

@@ -1,8 +1,10 @@
 package com.example.grandinstrument;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -13,12 +15,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
+import androidx.loader.content.AsyncTaskLoader;
 
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -35,9 +40,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.util.Util;
 import com.example.grandinstrument.data_base_adapter.DataBaseHandler;
-import com.example.grandinstrument.data_base_model.Client;
 import com.example.grandinstrument.data_base_model.Goods;
 import com.example.grandinstrument.data_base_model.TypeOfShipment;
 import com.example.grandinstrument.ui.login.LoginActivity;
@@ -50,14 +53,21 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -68,19 +78,19 @@ public class LoadFragment extends Fragment {
 
 
     private RequestQueue requestQueue;
-    private boolean nextGoods= false;
-    private ArrayList<Goods> goodsArrayList;
-    private int number_of_packet;
-    private DataBaseHandler dbOH  = new DataBaseHandler(Utils.mainContext);
+    private boolean nextGoods = false;
 
-    private boolean eraseGoods=true;
-    private boolean finishLoading=false;
+    private int number_of_packet;
+    private DataBaseHandler dbOH = new DataBaseHandler(Utils.mainContext);
+
+    private boolean eraseGoods = true;
+    private boolean finishLoading = true;
     private ProgressBar progressBar;
     private Button btLoadsGoods;
     private Button btLoadPicture;
 
     private Button btLoadBrands;
-
+    private Button btUpdate;
 
 
     private ImageView tools_iv;
@@ -126,6 +136,15 @@ public class LoadFragment extends Fragment {
     }
 
 
+    public void setEnableButtonLoadGoods() {
+        if (!finishLoading) {
+            btLoadsGoods.setAlpha(0.5f);
+            btLoadsGoods.setEnabled(false);
+        } else {
+            btLoadsGoods.setAlpha(1f);
+            btLoadsGoods.setEnabled(true);
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -138,7 +157,7 @@ public class LoadFragment extends Fragment {
 
         requestQueue = Volley.newRequestQueue(Utils.mainContext);
 
-        if (progressBar == null){
+        if (progressBar == null) {
             progressBar = mainView.findViewById(R.id.progressBar);
         }
 
@@ -157,6 +176,8 @@ public class LoadFragment extends Fragment {
                 btLoadPicturesOnclick(v);
             }
         });
+        setEnableButtonLoadGoods();
+
 
         Button btClearOrders = mainView.findViewById(R.id.btClearOrders);
         btClearOrders.setOnClickListener(new View.OnClickListener() {
@@ -171,7 +192,7 @@ public class LoadFragment extends Fragment {
         btLoad_type_of_shipment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               loadTypeOfShipment();
+                loadTypeOfShipment();
             }
         });
 
@@ -183,7 +204,161 @@ public class LoadFragment extends Fragment {
             }
         });
 
+        Button btUpdate = mainView.findViewById(R.id.btUpdate);
+        btUpdate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(Utils.mainContext);
+                builder.setTitle("Обновление.");
+                builder.setMessage("Обновить приложение?");
+                builder.setNegativeButton("Нет", null);
+                builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        updateApp();
+                    }
+                });
+                builder.show();
+
+            }
+        });
+
         return mainView;
+    }
+
+    private void updateApp() {
+
+        UpdateApp updateApp = new UpdateApp();
+        updateApp.execute();
+
+
+    }
+
+    private class UpdateApp extends AsyncTask{
+        private ProgressDialog mProgressDialog;
+        private Context mContext;
+        private String mErrors;
+
+        public UpdateApp() {
+
+            mContext = Utils.mainContext;
+
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+
+            InputStream input = null;
+            OutputStream output = null;
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(Utils.refUpdateAPK);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                // expect HTTP 200 OK, so we don't mistakenly save error report
+                // instead of the file
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    return "Server returned HTTP " + connection.getResponseCode()
+                            + " " + connection.getResponseMessage();
+                }
+
+                // this will be useful to display download percentage
+                // might be -1: server did not report the length
+                int fileLength = connection.getContentLength();
+
+                // download the file
+                input = connection.getInputStream();
+
+                output = new FileOutputStream(Utils.pathToFileApp+"/GI");
+
+                byte data[] = new byte[4096];
+                long total = 0;
+                int count;
+                while ((count = input.read(data)) != -1) {
+                    // allow canceling with back button
+                    if (isCancelled()) {
+                        input.close();
+                        return null;
+                    }
+//                    total += count;
+//                    // publishing the progress....
+//                    if (fileLength > 0) // only if total length is known
+//                        publishProgress((int) (total * 100 / fileLength));
+                    output.write(data, 0, count);
+                }
+            } catch (Exception e) {
+                mErrors = e.toString();
+                return e.toString();
+            } finally {
+                try {
+                    if (output != null)
+                        output.close();
+                    if (input != null)
+                        input.close();
+                } catch (IOException ignored) {
+                }
+
+                if (connection != null)
+                    connection.disconnect();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressDialog = ProgressDialog.show(mContext, "Загрузка файла...", "Ожидайте...");
+            mProgressDialog.setCanceledOnTouchOutside(false); // main method that force user cannot click outside
+            mProgressDialog.setCancelable(false);
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+            }
+
+            if (mErrors !=null && !mErrors.equals("")){
+                Utils.showAlert(mContext,"Ошибка!!!", mErrors,"");
+            }else{
+                updateAppFromFile();
+            }
+
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Object[] values) {
+            super.onProgressUpdate(values);
+        }
+    }
+
+    private void updateAppFromFile() {
+
+        File dir = new File(Utils.pathToFileApp);
+        if(dir.exists()){
+            File from = new File(dir,"GI");
+            File to = new File(dir,"GI.apk");
+            if(from.exists())
+                from.renameTo(to);
+        }
+
+//        Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+//        intent.setDataAndType(Uri.fromFile(new File(dir,"GI.apk")), "application/vnd.android.package");
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//
+//        Utils.mainContext.startActivity(intent);
+
+        Uri uri = FileProvider.getUriForFile(Utils.mainContext, BuildConfig.APPLICATION_ID + ".provider",new File(Utils.pathToFileApp+"/GI.apk"));
+        Intent promptInstall = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive");
+        promptInstall.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        promptInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Utils.mainContext.startActivity(promptInstall);
+
     }
 
     private void loadTypeOfShipment() {
@@ -405,6 +580,8 @@ public class LoadFragment extends Fragment {
 
 
     private void load_Goods(){
+        finishLoading = false;
+        setEnableButtonLoadGoods();
 
         String url;
         if (! nextGoods){
@@ -423,6 +600,9 @@ public class LoadFragment extends Fragment {
 
                 JSONArray jsonData;
                 JSONArray jsonErrors;
+
+                ArrayList<Goods> goodsArrayList = new ArrayList<>();
+
 
 
                 try {
@@ -506,9 +686,8 @@ public class LoadFragment extends Fragment {
                     if (!end_of_catalog){
 
                         Toast.makeText(Utils.mainContext,"Запись в базу...", Toast.LENGTH_LONG).show();
-                        writeGoodsToBase();
+                        writeGoodsToBase(goodsArrayList);
 
-                        load_Goods();
                     }
 
 
@@ -521,7 +700,7 @@ public class LoadFragment extends Fragment {
                 if (end_of_catalog){
                     Toast.makeText(Utils.mainContext,"Товары получены, запись в базу...", Toast.LENGTH_LONG).show();
                     finishLoading = true;
-                    writeGoodsToBase();
+                    writeGoodsToBase(goodsArrayList);
                     tools_iv.setVisibility(View.INVISIBLE);
 
                 }
@@ -557,33 +736,63 @@ public class LoadFragment extends Fragment {
 
     }
 
-    private void writeGoodsToBase() {
+    private void writeGoodsToBase(ArrayList<Goods> goodsArrayList) {
+
+
         if (eraseGoods){
             dbOH.clearTable(dbOH.getWritableDatabase(), DataBaseContract.GOODS_TABLE_NAME);
             dbOH.clearTable(dbOH.getWritableDatabase(),DataBaseContract.BRANDS_TABLE_NAME);
             eraseGoods = false;
         }
 
-        for (int i=0; i< goodsArrayList.size();i++){
-            ContentValues contentValues = contentValuesGoods(goodsArrayList.get(i));
-
-            insertGoods(contentValues);
-
-            contentValues = contentValuesPicture(goodsArrayList.get(i));
-            insertPicture(contentValues);
-
-        }
-
-        goodsArrayList.clear();
+        WriteGoodsToBaseAsync writeGoodsToBaseAsync = new WriteGoodsToBaseAsync(goodsArrayList, finishLoading);
+        writeGoodsToBaseAsync.execute();
 
         if (finishLoading){
             Toast.makeText(Utils.mainContext,"Товары успешно загружены.", Toast.LENGTH_LONG).show();
+            setEnableButtonLoadGoods();
             eraseGoods = true;
             finishLoading = false;
             tools_iv.setVisibility(View.INVISIBLE);
-            Utils.loadBrandsTable();
+
 
         }
+    }
+
+    private class WriteGoodsToBaseAsync extends AsyncTask{
+
+        private ArrayList<Goods>goodsArrayList;
+        private boolean finishLoading;
+        public WriteGoodsToBaseAsync(ArrayList<Goods>goodsArrayList, boolean finishLoading) {
+            this.goodsArrayList = goodsArrayList;
+            this.finishLoading = finishLoading;
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+
+            for (int i=0; i< goodsArrayList.size();i++){
+                ContentValues contentValues = contentValuesGoods(goodsArrayList.get(i));
+
+                insertGoods(contentValues);
+
+                contentValues = contentValuesPicture(goodsArrayList.get(i));
+                insertPicture(contentValues);
+
+            }
+
+            if (finishLoading){
+                eraseGoods = true;
+                finishLoading = false;
+                Utils.loadBrandsTable();
+
+            }else{
+                load_Goods();
+            }
+            return null;
+        }
+
+
     }
 
     private void insertPicture(ContentValues contentValues) {
@@ -652,7 +861,6 @@ public class LoadFragment extends Fragment {
                         Glide.with(Utils.mainContext).asGif().load(R.drawable.tool).into(tools_iv);
 
 
-                        goodsArrayList = new ArrayList<>();
                         nextGoods= false;
                         number_of_packet = 0;
                         load_Goods();

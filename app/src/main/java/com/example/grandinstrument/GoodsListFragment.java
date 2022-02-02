@@ -91,6 +91,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
     private TextView tvTitle;
     private View mainView;
     private Button btAddAllDiscountGoods;
+    private boolean justSearch=false;
 
 
     public void setTitleActivity(){
@@ -411,6 +412,7 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
         }
 
 
+        justSearch = true;
         recyclerView.requestFocus();
         restartLoader(GOODS_LOADER);
     }
@@ -672,7 +674,8 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
             case GOODS_LOADER_WITH_SELECTION:
                 adapter.swapCursor(data);
 
-                if (!etSeek.getText().toString().isEmpty() && recyclerView.getAdapter().getItemCount() == 0){
+                if (justSearch && recyclerView.getAdapter().getItemCount() == 0){
+                    justSearch = false;
                     new AlertDialog.Builder(Utils.mainContext)
                             .setTitle("")
                             .setMessage("По заданным параметрам товары не найдены")

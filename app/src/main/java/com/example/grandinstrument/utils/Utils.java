@@ -18,6 +18,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -55,11 +56,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -105,9 +110,11 @@ public class Utils {
     public static String mMessage = "";
     public static String [] brands;
 
-
-
-
+    public static final int versionApp = 1;
+    public static final String refUpdateAPK="https://drive.google.com/uc?export=download&id=1CTebHAj-83JUWXLYPDgYdHP-h9QphTb_";
+    //public static final String pathToFileApp =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsoluteFile().getAbsolutePath()+"/GI";
+    public static  String pathToFileApp;
+    //public static  String pathToFileApp;
 
     public static void setShowPrice(Context context, boolean showPrice) {
         Utils.showPrice = showPrice;
@@ -900,7 +907,7 @@ public class Utils {
 
         androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
         builder.setTitle("Добавление товаров недели.");
-        builder.setMessage("Добавить все товары неделеи в корзину?");
+        builder.setMessage("Добавить все товары недели в корзину?");
         builder.setCancelable(true);
         builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
             @Override
@@ -1006,6 +1013,8 @@ public class Utils {
             contentValues.put(DataBaseContract.R_BRANDS.RB_NAME,name);
             contentResolver.insert(DataBaseContract.BASE_CONTENT_URI_BRANDS,contentValues);
         }
+
+        setBrandList();
     }
 
     public static void setBrandList() {
@@ -1285,9 +1294,11 @@ public class Utils {
         }
     }
 
-    public static boolean saveCart(TypeOfShipment shipment) {
+
+
+    public static String saveCart(TypeOfShipment shipment) {
         if (getQtyInCart() == 0){
-            return false;
+            return null;
         }
 
         ContentResolver contentResolver = mainContext.getContentResolver();
@@ -1417,15 +1428,15 @@ public class Utils {
 
         } catch (RemoteException e) {
             e.printStackTrace();
-            return false;
+            return null;
         } catch (OperationApplicationException e) {
             e.printStackTrace();
-            return false;
+            return null;
         }
 
         ((MainActivity)Utils.mainContext).setTitleActivity();
 
-        return true;
+        return uuid;
 
     }
 

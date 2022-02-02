@@ -170,7 +170,7 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
             ProgressBar progressBar = relativeLayout.findViewById(R.id.pbAddGoodsByMeasurement);
             TextView tvProgressBar = relativeLayout.findViewById(R.id.tvProgressBar);
 
-            int sec = 2;
+            int sec = 20;
             stopAddingGoods = false;
 
             progressBar.setMin(0);
@@ -269,11 +269,11 @@ public class GoodsRecyclerViewCursorAdapter extends RecyclerViewCursorAdapter<Go
 
             @Override
             protected Void doInBackground(Void... params) {
-
+                int milliseconds = sec;
                 try {
-                    for (int i=0; i<sec;i++){
+                    for (int i=0; i<milliseconds;i++){
                         if (stopAddingGoods)break;
-                        TimeUnit.SECONDS.sleep(1);
+                        TimeUnit.MICROSECONDS.sleep(1);
                         changeProgressBar(mProgressBar,tvProgressBar,1,adapterPosition);
                     }
 
