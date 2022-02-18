@@ -6,8 +6,9 @@ import android.provider.BaseColumns;
 import java.util.ArrayList;
 
 public final class DataBaseContract implements BaseColumns {
-
-    public static final int DATA_BASE_VERSION = 30;
+    public static final int REDACTION = 1;
+    public static final int VERSION = 32;
+    public static final int DATA_BASE_VERSION = 31;
     public static final String DATA_BASE_NAME = "gi_mobile_base";
     public static final String GOODS_TABLE_NAME = "goods_table";
 

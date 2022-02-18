@@ -25,6 +25,8 @@ import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -70,6 +72,11 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
     private TextView tvChosenOrders;
     private Button btSaveTo1cChosenOrders;
     private Button btUnSelect;
+    private int rbByOrderNumber;
+    private int rbByClientName;
+    private RadioGroup rgSorting;
+    private ImageButton ibDirectionOfSorting;
+    private ImageButton ibDeleteOrder;
 
     public OrdersFragment() {
         mContext = Utils.mainContext;
@@ -137,7 +144,101 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
                 showLayoutSelectedOrder();
             }
         });
+
+
+        ibDirectionOfSorting = mainView.findViewById(R.id.ibDirectionOfSorting);
+        ibDirectionOfSorting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Utils.directionSortingOrders = !Utils.directionSortingOrders;
+                setSortingOrders();
+            }
+        });
+        rgSorting = mainView.findViewById(R.id.rgSorting);
+        rgSorting.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId==rbByOrderNumber){
+                    Utils.typeOfSortingOrders=1;
+                }else{
+                    Utils.typeOfSortingOrders=2;
+                }
+                setSortingOrders();
+            }
+        });
+        rbByOrderNumber = R.id.rbByOrderNumber;
+        rbByClientName = R.id.rbByClientName;
+        setSortingOrders();
+
+        ibDeleteOrder = mainView.findViewById(R.id.ibDeleteOrder);
+        ibDeleteOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteSelectedOrder();
+            }
+        });
         return mainView;
+    }
+
+    private void deleteSelectedOrder() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(mContext);
+        builder.setTitle("Удаление заказов..");
+        builder.setMessage("Удалить "+SelectOrderModel.getQtySelected()+" заказ(ов)");
+        builder.setCancelable(true);
+        builder.setNegativeButton("Нет", null);
+        builder.setPositiveButton("Да", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                deleteSelectedOrderNext();
+            }
+        });
+
+        builder.show();
+
+
+        if (Utils.mSelectedList == null){
+            return;
+        }
+
+    }
+
+    private void deleteSelectedOrderNext() {
+        ArrayList<String> orderForDelete = new ArrayList<>();
+
+        for (int i=0; i<Utils.mSelectedList.size(); i++){
+
+
+            SelectOrderModel selectOrderModel = Utils.mSelectedList.get(i);
+            String uuid = selectOrderModel.getUuid();
+
+            orderForDelete.add(uuid);
+        }
+
+        for (int i = 0; i<orderForDelete.size();i++){
+            OrderHeader orderHeader = OrderHeader.loadOrderHeader(orderForDelete.get(i));
+            orderHeader.deleteOrder();
+        }
+        clearSelected();
+    }
+
+    private void setSortingOrders() {
+        if (Utils.typeOfSortingOrders ==0){
+            Utils.typeOfSortingOrders = 1;//по номеру заказа
+        }
+
+        if (Utils.typeOfSortingOrders == 1){
+            rgSorting.check(rbByOrderNumber);
+        }else{
+            rgSorting.check(rbByClientName);
+        }
+        if (Utils.directionSortingOrders){
+            ibDirectionOfSorting.setImageResource(R.drawable.ic_baseline_keyboard_arrow_up_24);
+        }else{
+            ibDirectionOfSorting.setImageResource(R.drawable.ic_baseline_keyboard_arrow_down_24);
+        }
+
+        LoaderManager.getInstance(this).restartLoader(ORDERS_LOADER, null, this);
+
     }
 
     private void clearSelected() {
@@ -176,14 +277,15 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
 
             if (selectOrderModel.isSelected()){
                 OrderHeader orderHeader = OrderHeader.loadOrderHeader(selectOrderModel.getUuid());
-                String errors = "";
-                orderHeader.saveOrderTo_1c(mContext,i==Utils.mSelectedList.size()-1?false:true);
-                if (!errors.equals("")){
-                    Toast.makeText(mContext,errors,Toast.LENGTH_LONG).show();
-                }else{
-                    qtyUploaded++;
+                if (orderHeader.verifyOrder(Utils.mainContext)){
+                    String errors = "";
+                    orderHeader.saveOrderTo_1c(mContext,i==Utils.mSelectedList.size()-1?false:true);
+                    if (!errors.equals("")){
+                        Toast.makeText(mContext,errors,Toast.LENGTH_LONG).show();
+                    }else{
+                        qtyUploaded++;
+                    }
                 }
-
             }
         }
         clearSelected();
@@ -218,6 +320,16 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String sorting;
+        if (Utils.typeOfSortingOrders==1){
+            sorting = DataBaseContract.R_ORDER_HEADER.RH_KEY_ID;
+        }else{
+            sorting = DataBaseContract.R_ORDER_HEADER.RH_CLIENT_NAME;
+        }
+        if (!Utils.directionSortingOrders){
+            sorting = sorting + " DESC";
+        }
+
 
         switch (id) {
             case ORDERS_LOADER:
@@ -227,7 +339,7 @@ public class OrdersFragment extends Fragment  implements LoaderManager.LoaderCal
                         DataBaseContract.R_ORDER_HEADER.ORDER_HEADER_COLUMNS,
                         selection,
                         selectionArgs,
-                        DataBaseContract.R_ORDER_HEADER.RH_KEY_ID + " DESC"
+                        sorting
                 );
                 return cursorLoader;
             default:

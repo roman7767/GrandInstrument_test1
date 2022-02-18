@@ -17,7 +17,10 @@
 
     <!-- Messages Preferences -->
     <string name="server_title">Сервер</string>
-    <string name="default_server">https://web1c-x64.grandinstrument.com:41443/GrandInstrument-UT-restored</string>
+
+    <string name="default_server">https://web1c-x64.grandinstrument.com:41443/GrandInstrument-UT</string>
+<!--    <string name="default_server">https://web1c-x64.grandinstrument.com:41443/GrandInstrument-UT-restored</string>-->
+
     <string name="api_key">na^pr-M8J50;Ikg*7+0LH37M*Vg^j-A7</string>
     <string name="customer_code_1c">000024878</string>
     <string name="app_label">поиск</string>

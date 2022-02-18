@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity  {
     private TextView tvSettingsBar;
     private int curMenuXml=0;
     private MenuItem itemMenuShowPrice;
+    private MenuItem itemMenuShowPriceRRC;
     private ConstraintLayout leftSideBar;
     private TextView tvCartQty;
     private ImageView iv_ClientBar;
@@ -98,9 +99,9 @@ public class MainActivity extends AppCompatActivity  {
                     }
                 };
 
-        //*********************
-        Utils.curUser = User.getUserByEmail("e@e.com", this);
-        //*********************
+//        //*********************
+//        Utils.curUser = User.getUserByEmail("e@e.com", this);
+//        //*********************
 
         if (Utils.mStatuses == null){
             Utils.mStatuses = getResources().getStringArray( R.array.statuses_of_order);
@@ -210,6 +211,8 @@ public class MainActivity extends AppCompatActivity  {
 
         if (Utils.curUser == null){
             startActivity(Utils.loginIntent );
+        }else{
+            Utils.checkVersion();
         }
 
         if (Utils.mCurCartQty != null && Utils.curClient == null){
@@ -369,11 +372,13 @@ public class MainActivity extends AppCompatActivity  {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         itemMenuShowPrice = null;
+        itemMenuShowPriceRRC = null;
         if (curMenuXml == 0){
             menuInflater.inflate(R.menu.menu,menu);
         }else if (curMenuXml == R.menu.menu_goods_list){
             menuInflater.inflate(curMenuXml,menu);
             itemMenuShowPrice = menu.findItem(R.id.btShowPrice);
+            itemMenuShowPriceRRC = menu.findItem(R.id.btShowPriceRRC);
             setShowPriceTitle();
         }
 
@@ -532,6 +537,12 @@ public class MainActivity extends AppCompatActivity  {
             setShowPriceTitle();
         }
 
+        if (id == R.id.btShowPriceRRC){
+            Utils.setShowPriceRRC(this,!Utils.showPriceRRC);
+            getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_GOODS, null);
+            setShowPriceTitle();
+        }
+
         return true;
 
     }
@@ -543,6 +554,14 @@ public class MainActivity extends AppCompatActivity  {
                 itemMenuShowPrice.setTitle("Скрыть цену");
             }else{
                 itemMenuShowPrice.setTitle("Показать цену");
+            }
+        }
+
+        if (itemMenuShowPriceRRC != null){
+            if (Utils.showPriceRRC){
+                itemMenuShowPriceRRC.setTitle("Скрыть цену РРЦ");
+            }else{
+                itemMenuShowPriceRRC.setTitle("Показать цену РРЦ");
             }
         }
     }

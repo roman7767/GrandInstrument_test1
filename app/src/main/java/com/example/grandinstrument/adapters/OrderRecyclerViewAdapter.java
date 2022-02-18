@@ -65,6 +65,7 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
         private TextView tv_total;
         private TextView tv_totalQty;
         private TextView tv_type_of_shipment;
+        private TextView tv_codeClient;
         private ImageButton ibCheck;
 
 
@@ -83,6 +84,7 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
             tv_total = view.findViewById(R.id.tv_total);
             tv_totalQty = view.findViewById(R.id.tv_totalQty);
             tv_type_of_shipment = view.findViewById(R.id.tv_type_of_shipment);
+            tv_codeClient = view.findViewById(R.id.tv_codeClient);
 
             ibCheck = view.findViewById(R.id.ibCheck);
             ibCheck.setOnClickListener(this);
@@ -102,6 +104,7 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
             tv_number.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_KEY_ID))));
             tv_Number1c.setText(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_ORDER_NUMBER_1c)));
             tv_NameClient.setText(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_CLIENT_NAME)));
+            tv_codeClient.setText(Utils.deletePreviousZero(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_CLIENT_ID_1C))));
             tv_total.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TOTAL))));
             tv_totalQty.setText(String.valueOf(cursor.getInt(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_QTY))));
             tv_type_of_shipment.setText(cursor.getString(cursor.getColumnIndex(DataBaseContract.R_ORDER_HEADER.RH_TYPE_OF_SHIPMENT)));
@@ -161,21 +164,21 @@ public class OrderRecyclerViewAdapter extends RecyclerViewCursorAdapter<OrderRec
 
         int curSelected = Utils.mSelectedList.indexOf(selectOrderModel);
         OrderHeader orderHeader = OrderHeader.loadOrderHeader(selectOrderModel.getUuid());
-        if (orderHeader.verifyOrder(Utils.mainContext)){
-            if (curSelected==-1){
 
-                    selectOrderModel.setSelected(true);
-                    Utils.mSelectedList.add(selectOrderModel);
+        if (curSelected==-1){
+
+                selectOrderModel.setSelected(true);
+                Utils.mSelectedList.add(selectOrderModel);
 
 
-            }else{
-                selectOrderModel = Utils.mSelectedList.get(curSelected);
-                selectOrderModel.setSelected(!selectOrderModel.isSelected());
-            }
-
-            Utils.isCheckedOrder.setValue(true);
-            mContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,null);
+        }else{
+            selectOrderModel = Utils.mSelectedList.get(curSelected);
+            selectOrderModel.setSelected(!selectOrderModel.isSelected());
         }
+
+        Utils.isCheckedOrder.setValue(true);
+        mContext.getContentResolver().notifyChange(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,null);
+
     }
 
 }

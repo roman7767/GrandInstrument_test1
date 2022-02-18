@@ -19,6 +19,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.loader.content.AsyncTaskLoader;
 
 import android.os.Environment;
@@ -29,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -68,7 +72,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link LoadFragment#newInstance} factory method to
@@ -94,6 +97,8 @@ public class LoadFragment extends Fragment {
 
 
     private ImageView tools_iv;
+
+    private TextView tvInformationLoadGoods;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -205,6 +210,11 @@ public class LoadFragment extends Fragment {
         });
 
         Button btUpdate = mainView.findViewById(R.id.btUpdate);
+        if (Utils.availableVersion!=null&&Utils.availableVersion!="" ){
+            String title = "Обновить приложение\nДоступна v-"+Utils.availableVersion;
+            btUpdate.setText(title);
+        }
+
         btUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -223,7 +233,39 @@ public class LoadFragment extends Fragment {
             }
         });
 
+        TextView tvVersion = mainView.findViewById(R.id.tvVersion);
+        tvVersion.setText("V-"+DataBaseContract.REDACTION+"."+DataBaseContract.VERSION);
+
+        tvInformationLoadGoods = mainView.findViewById(R.id.tvInformationLoadGoods);
+
+        if (Utils.dateLastLoadGoods == null){
+            Utils.dateLastLoadGoods = new MutableLiveData<>();
+            Utils.dateLastLoadGoods.setValue(Utils.getDateSuccessLoadGoods());
+        }
+        setText_tvInformationLoadGoods();
+
+        Utils.dateLastLoadGoods.observe(getViewLifecycleOwner(), new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+                setText_tvInformationLoadGoods();
+            }
+        });
         return mainView;
+    }
+
+    private void setText_tvInformationLoadGoods() {
+        int startedLoadGoods = Utils.getStartLoadGoods();
+        if (startedLoadGoods==1){
+            tvInformationLoadGoods.setText("Загрузка номенклатуры не завершена");
+        }else{
+            String date = Utils.getDateSuccessLoadGoods();
+            if (date.equals("")){
+                tvInformationLoadGoods.setText("");
+            }else {
+                tvInformationLoadGoods.setText("Дата последней загрузки номенклатуры:" + date);
+            }
+
+        }
     }
 
     private void updateApp() {
@@ -687,6 +729,7 @@ public class LoadFragment extends Fragment {
 
                         Toast.makeText(Utils.mainContext,"Запись в базу...", Toast.LENGTH_LONG).show();
                         writeGoodsToBase(goodsArrayList);
+                        Utils.setStartLoadGoods(true);
 
                     }
 
@@ -701,6 +744,7 @@ public class LoadFragment extends Fragment {
                     Toast.makeText(Utils.mainContext,"Товары получены, запись в базу...", Toast.LENGTH_LONG).show();
                     finishLoading = true;
                     writeGoodsToBase(goodsArrayList);
+                    Utils.setStartLoadGoods(false);
                     tools_iv.setVisibility(View.INVISIBLE);
 
                 }

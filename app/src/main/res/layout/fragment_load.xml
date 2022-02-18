@@ -7,6 +7,18 @@
     android:layout_height="match_parent"
     tools:context=".LoadFragment">
 
+    <TextView
+        android:id="@+id/tvVersion"
+        android:layout_marginBottom="50dp"
+        android:text="v-x.xx"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -23,6 +35,16 @@
             android:layout_gravity="center_vertical"
             android:background="@color/grand_background"
             android:orientation="vertical">
+            <TextView
+                android:layout_margin="4dp"
+                android:id="@+id/tvInformationLoadGoods"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:text=""
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
 
             <Button
                 android:id="@+id/btLoadsGoods"

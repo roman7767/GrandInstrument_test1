@@ -3,12 +3,14 @@
     <PreferenceCategory app:title="@string/server_header">
 
         <EditTextPreference
+            app:isPreferenceVisible="false"
             app:key="server"
             app:title="@string/server_title"
             app:useSimpleSummaryProvider="true"
             app:allowDividerAbove="true"
             app:defaultValue="@string/default_server"/>
         <CheckBoxPreference
+
             app:key="allow_load_from_url"
             app:title="Разрешить интерактивную загрузку изображений"
             app:useSimpleSummaryProvider="true"

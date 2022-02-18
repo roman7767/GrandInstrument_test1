@@ -39,6 +39,12 @@
             android:tooltipText="Видимость цены клиента"
             android:title="Показать цену"
             />
+        <item
+            android:id="@+id/btShowPriceRRC"
+            app:showAsAction="collapseActionView"
+            android:tooltipText="Видимость цены РРЦ"
+            android:title="Показать цену РРЦ"
+            />
 
 
 

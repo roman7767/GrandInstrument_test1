@@ -49,6 +49,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
     public CartRecyclerViewAdapter adapter;
     private LinearLayoutManager manager;
     private TextView etClient;
+    private TextView tv_codeClient;
     private TextView etSum;
     private Spinner sTypeOfShipment;
     private ArrayAdapter shipmentAdapter;
@@ -87,8 +88,10 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
         cart_rv.hasFixedSize();
 
         etClient = findViewById(R.id.etClient);
+        tv_codeClient = findViewById(R.id.tv_codeClient);
         if (Utils.curClient != null){
             etClient.setText(Utils.curClient.getName());
+            tv_codeClient.setText(Utils.deletePreviousZero(Utils.curClient.getId_1c()));
         }
 
         sTypeOfShipment = findViewById(R.id.sTypeOfShipment);
@@ -271,7 +274,7 @@ public class CartActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public void changeClient() {
         etClient.setText(Utils.curClient.getName());
-        
+        tv_codeClient.setText(Utils.deletePreviousZero(Utils.curClient.getId_1c()));
 
         Utils.loadPriceForCart(this);
 

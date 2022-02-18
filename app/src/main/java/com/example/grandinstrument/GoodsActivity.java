@@ -83,7 +83,12 @@ public class GoodsActivity extends AppCompatActivity {
                     description_tv.setText(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_DESCRIPTION)));
                     brand_tv.setText(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_BRAND)));
                     //categories_tv.setText(cursor.getString(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_CATEGORY)));
-                    rrc_tv.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC))));
+                    if (!Utils.showPriceRRC){
+                        rrc_tv.setText("");
+                    }else{
+                        rrc_tv.setText(String.valueOf(cursor.getDouble(cursor.getColumnIndexOrThrow(DataBaseContract.R_GOODS.RG_RRC))));
+                    }
+
                     if (Utils.curClient == null || !Utils.showPrice){
                         price_tv.setText("");
                     }else{

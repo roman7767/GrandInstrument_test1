@@ -43,6 +43,88 @@ public class OrderHeader {
     private String type_of_shipment_code;
     private int qty;
 
+    public void deleteOrder() {
+
+        DeleteOrder deleteOrder = new DeleteOrder(Utils.mainContext, getUuid());
+        deleteOrder.execute();
+    }
+
+    private class DeleteOrder extends AsyncTask<String, Void, Void> {
+        private ProgressDialog mProgressDialog;
+
+        private Context mContext;
+        private String error = "";
+        private String uuid = "";
+
+        public DeleteOrder(Context context, String uuid) {
+            this.mContext = context;
+            this.error  = "";
+            this.uuid = uuid;
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+
+            ContentResolver contentResolver = mContext.getContentResolver();
+
+            ArrayList<ContentProviderOperation> list = new
+                    ArrayList<ContentProviderOperation>();
+
+            Cursor cursorH = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,DataBaseContract.R_ORDER_HEADER.ORDER_HEADER_COLUMNS,
+                    DataBaseContract.R_ORDER_HEADER.RH_STATUS +"=?", new String[]{uuid},null );
+
+            list.add(ContentProviderOperation.
+                    newDelete(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER).withSelection(DataBaseContract.R_ORDER_HEADER.RH_UUID+ " = ?", new String[]{uuid}).build());
+
+            for (int i=0; i<cursorH.getCount(); i++){
+                cursorH.moveToPosition(i);
+
+                list.add(ContentProviderOperation.
+                        newDelete(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER).withSelection(DataBaseContract.R_ORDER_ROW.R_UUID+ " = ?", new String[]{uuid}).build());
+
+            }
+
+            try {
+                contentResolver.applyBatch(DataBaseContract.URI_AUTHORITY, list);
+                Utils.curClient = null;
+                Utils.curOrder = null;
+                contentResolver.notifyChange(DataBaseContract.BASE_CONTENT_URI_HEAD_ORDER,null);
+
+            } catch (RemoteException e) {
+                e.printStackTrace();
+                error = error + "\n" + e.getMessage();
+            } catch (OperationApplicationException e) {
+                e.printStackTrace();
+                error = error + "\n" + e.getMessage();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = ProgressDialog.show(mContext, "Удаление заказов", "Удаляем заказ(ы)...");
+            mProgressDialog.setCanceledOnTouchOutside(true); // main method that force user cannot click outside
+            mProgressDialog.setCancelable(true);
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+
+            if (mProgressDialog != null) {
+                mProgressDialog.dismiss();
+            }
+
+            if (error.isEmpty()){
+                Toast.makeText(mContext,"Заказ(ы) удалены.",Toast.LENGTH_LONG).show();
+            }else{
+                Toast.makeText(mContext,"Ошибка удаления заказов." + error,Toast.LENGTH_LONG).show();
+            }
+
+        }
+    }
+
     public String getDelivery_date() {
         return delivery_date;
     }
@@ -621,12 +703,12 @@ public class OrderHeader {
     public boolean verifyOrder(Context context){
 
         if (getClient() == null || getClient().getApi_key() == null){
-            Utils.showAlert(context, "Ошибка сохранения заказа.","Не выбран клиент",null);
+            Utils.showAlert(context, toString() + "\n Ошибка сохранения заказа.","Не выбран клиент",null);
             return false;
         }
 
         if (getType_of_shipment_code() == null){
-            Utils.showAlert(context, "Ошибка сохранения заказа.","Не выбран способ отправки",null);
+            Utils.showAlert(context, toString() + "\n Ошибка сохранения заказа.","Не выбран способ отправки",null);
             return false;
         }
 
@@ -634,7 +716,7 @@ public class OrderHeader {
         Cursor cursor = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_ROW_ORDER, DataBaseContract.R_ORDER_ROW.ORDER_ROW_COLUMNS,DataBaseContract.R_ORDER_ROW.R_UUID + "=?",new String[]{uuid},null);
 
         if (cursor.getCount() == 0){
-            Utils.showAlert(context, "Ошибка сохранения заказа.","Заказ не содержит товаров.",null);
+            Utils.showAlert(context, toString() + "\n Ошибка сохранения заказа.","Заказ не содержит товаров.",null);
             return false;
         }
 

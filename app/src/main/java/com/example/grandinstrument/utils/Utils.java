@@ -23,12 +23,14 @@ import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.MutableLiveData;
+import androidx.preference.PreferenceManager;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -62,7 +64,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -90,6 +94,7 @@ public class Utils {
     public static boolean allow_load_from_url;
     public static Client curClient;
     public static boolean showPrice;
+    public static boolean showPriceRRC;
     public static ArrayList<LeftSideBarItem> leftSideBarItems;
     public static Context mainContext;
     public static Intent loginIntent;
@@ -107,14 +112,19 @@ public class Utils {
 
     public static List<SelectOrderModel> mSelectedList;
     public static MutableLiveData<Boolean> isCheckedOrder;
+    public static MutableLiveData<String> dateLastLoadGoods;
     public static String mMessage = "";
     public static String [] brands;
 
-    public static final int versionApp = 1;
-    public static final String refUpdateAPK="https://drive.google.com/uc?export=download&id=1CTebHAj-83JUWXLYPDgYdHP-h9QphTb_";
-    //public static final String pathToFileApp =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsoluteFile().getAbsolutePath()+"/GI";
+    public static final String refUpdateAPK  = "https://drive.google.com/uc?exPport=download&id=16YjRj7j1XGORbX7A3ricsALKJv-7Ez53";
+    public static final String refVersionAPK = "https://drive.google.com/uc?exPport=download&id=1dYMd9P1VmfB44FWaVoK2MeG1xZUWbv2_";
     public static  String pathToFileApp;
     //public static  String pathToFileApp;
+    public static int typeOfSortingOrders = 0;
+    public static boolean directionSortingOrders = false;
+    public static boolean showedUpdate = false;
+    public static String availableVersion = "";
+
 
     public static void setShowPrice(Context context, boolean showPrice) {
         Utils.showPrice = showPrice;
@@ -124,6 +134,17 @@ public class Utils {
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putBoolean("showPrice", showPrice);
+
+    }
+
+    public static void setShowPriceRRC(Context context, boolean showPriceRRC) {
+        Utils.showPriceRRC = showPriceRRC;
+
+        SharedPreferences sharedPreferences = context.getSharedPreferences("showPriceRRC", Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putBoolean("showPriceRRC", showPriceRRC);
 
     }
 
@@ -685,13 +706,21 @@ public class Utils {
         String[] columns = new String[] { "sum(" + DataBaseContract.R_CART.RC_QTY + ")" };
 
         ContentResolver contentResolver = mainContext.getContentResolver();
-        Cursor cursorTotal = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,columns,DataBaseContract.R_CART.RC_GOOD_GUID_1C + "=?",new String[]{guid_1c},null);
-        cursorTotal.moveToFirst();
+        Cursor cursorTotal = null;
         int qty = 0;
-        qty= (int) (qty + cursorTotal.getDouble(0));
+        try{
+            cursorTotal = contentResolver.query(DataBaseContract.BASE_CONTENT_URI_CART,columns,DataBaseContract.R_CART.RC_GOOD_GUID_1C + "=?",new String[]{guid_1c},null);
+            cursorTotal.moveToFirst();
+            qty= (int) (qty + cursorTotal.getDouble(0));
 
+
+        }
+        finally {
+            if (cursorTotal!=null && !cursorTotal.isClosed()) {
+                cursorTotal.close();
+            }
+        }
         return  qty;
-
     }
 
     public static Goods getGoodFromDB(String guid_1c) {
@@ -1002,6 +1031,7 @@ public class Utils {
                 null,null ,DataBaseContract.R_GOODS.RG_BRAND);
 
         contentResolver.delete(DataBaseContract.BASE_CONTENT_URI_BRANDS,null,null);
+
         for (int i=0;i<cursor.getCount(); i++){
             cursor.moveToPosition(i);
 
@@ -1014,7 +1044,10 @@ public class Utils {
             contentResolver.insert(DataBaseContract.BASE_CONTENT_URI_BRANDS,contentValues);
         }
 
-        setBrandList();
+        if (cursor.getCount() > 0){
+            setBrandList();
+        }
+
     }
 
     public static void setBrandList() {
@@ -1046,6 +1079,175 @@ public class Utils {
 
         }
 
+    }
+
+    public static String deletePreviousZero(String string) {
+        if (string==null){
+            return "";
+        }
+        String curString = string;
+
+
+        while (curString.length() > 0){
+            String curSymbol = curString.substring(0,1);
+            if (curSymbol.equals("0")){
+                curString = curString.substring(1);
+            }else{
+                break;
+            }
+        }
+       return curString;
+    }
+
+    public static void checkVersion() {
+
+        if (showedUpdate){
+            return ;
+        }
+
+        CheckVersion checkVersion = new CheckVersion();
+        checkVersion.execute();
+
+    }
+
+    public static void setStartLoadGoods(boolean start) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mainContext);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        if (start){
+            editor.putInt("StartLoadGoods",1);
+            editor.apply();
+        }else{
+            editor.putInt("StartLoadGoods",0);
+            editor.putString("DateSuccessLoadGoods",getDate(Calendar.getInstance().getTimeInMillis()));
+            editor.apply();
+            dateLastLoadGoods.setValue(getDateSuccessLoadGoods());
+        }
+
+
+    }
+
+    public static int getStartLoadGoods(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mainContext);
+        return prefs.getInt("StartLoadGoods",0);
+    }
+
+    public static String getDateSuccessLoadGoods(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mainContext);
+        return prefs.getString("DateSuccessLoadGoods","");
+    }
+
+    private static class CheckVersion extends AsyncTask{
+
+        private Context mContext;
+        private String mErrors;
+        private String redaction = "";
+        private String version="";
+
+        public CheckVersion() {
+
+            mContext = Utils.mainContext;
+            mErrors = "";
+
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+
+            InputStream input = null;
+            OutputStream output = null;
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(Utils.refVersionAPK);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                // expect HTTP 200 OK, so we don't mistakenly save error report
+                // instead of the file
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+
+                    mErrors = "Server returned HTTP " + connection.getResponseCode()
+                            + " " + connection.getResponseMessage();
+                    return mErrors;
+                }
+
+                // this will be useful to display download percentage
+                // might be -1: server did not report the length
+                int fileLength = connection.getContentLength();
+
+                // download the file
+                input = connection.getInputStream();
+
+                output = new FileOutputStream(Utils.pathToFileApp+"/version.txt");
+
+                byte data[] = new byte[4096];
+                long total = 0;
+                int count;
+                while ((count = input.read(data)) != -1) {
+                    // allow canceling with back button
+                    if (isCancelled()) {
+                        input.close();
+                        return null;
+                    }
+                    output.write(data, 0, count);
+                }
+
+                File file = new File(Utils.pathToFileApp,"/version.txt");
+                StringBuilder text = new StringBuilder();
+
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(file));
+                    redaction = br.readLine();
+                    version = br.readLine();
+                    br.close();
+                }
+                catch (IOException e) {
+                    //You'll need to add proper error handling here
+                }
+
+
+
+            } catch (Exception e) {
+                mErrors = e.toString();
+                return e.toString();
+            } finally {
+                try {
+                    if (output != null)
+                        output.close();
+                    if (input != null)
+                        input.close();
+                } catch (IOException ignored) {
+                }
+
+                if (connection != null)
+                    connection.disconnect();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            int iRedaction;
+            int iVersion;
+
+            if (version!=null && version!=""){
+                try{
+                    iRedaction = Integer.parseInt(redaction);
+                    iVersion = Integer.parseInt(version);
+                }catch (Exception e){
+                    iRedaction = 0;
+                    iVersion = 0;
+                }
+
+                if (iRedaction > DataBaseContract.REDACTION || iVersion > DataBaseContract.VERSION){
+                    showAlert(mainContext,"Обновление", "Доступно обновление!\n Обновите программу. ", "Ok");
+                    showedUpdate = true;
+                    availableVersion = redaction+"."+version;
+                }
+            }
+        }
     }
 
     private static  class LoadPrice extends AsyncTask<String, Void, Void> {
@@ -1314,11 +1516,20 @@ public class Utils {
         Client client = null;
         String dateOfDelivery = null;
 
+        cursorCart.moveToFirst();
+
         if (curOrder!=null){
             uuid = curOrder.getUuid();
+        }else{
+            uuid = cursorCart.getString(cursorCart.getColumnIndex(DataBaseContract.R_CART.RC_UUID_ORDER));
+            if (uuid !=null){
+                try{
+                    Utils.curOrder = OrderHeader.loadOrderHeader(uuid);
+                }finally {
+                    Utils.curOrder = null;
+                }
+            }
         }
-
-
 
         ArrayList<ContentProviderOperation> list = new
                 ArrayList<ContentProviderOperation>();
@@ -1327,7 +1538,9 @@ public class Utils {
 
 
 
-        cursorCart.moveToFirst();
+
+
+
         for (int i=0; i<cursorCart.getCount();i++){
             cursorCart.moveToPosition(i);
 

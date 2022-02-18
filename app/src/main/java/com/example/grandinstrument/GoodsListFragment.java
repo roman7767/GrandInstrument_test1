@@ -113,6 +113,12 @@ public class GoodsListFragment extends Fragment implements LoaderManager.LoaderC
             }else{
                 itemMenuShowPrice.setTitle("Показать цену");
             }
+
+            if (Utils.showPriceRRC){
+                itemMenuShowPrice.setTitle("Скрыть цену РРЦ");
+            }else{
+                itemMenuShowPrice.setTitle("Показать цену РРЦ");
+            }
         }
     }
 

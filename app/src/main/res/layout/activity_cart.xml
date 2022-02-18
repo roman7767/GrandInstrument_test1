@@ -56,8 +56,18 @@
                             android:layout_width="90dp"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="4dp"
+                            android:layout_gravity="center"
                             android:text="Клиент:"
                             android:textSize="20sp" />
+                        <TextView
+                            android:id="@+id/tv_codeClient"
+                            android:layout_marginLeft="2dp"
+                            android:layout_weight="2"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:layout_gravity="center"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"/>
 
                         <TextView
                             android:id="@+id/etClient"
@@ -68,9 +78,11 @@
                             android:focusable="auto"
                             android:inputType="none"
                             android:clickable="false"
+                            android:layout_gravity="center"
                             android:textStyle="bold"
                             android:minWidth="100dp"
                             android:textSize="20sp" />
+
                         <ImageButton
                             android:id="@+id/ibSelectClient"
                             android:src="@drawable/ic_baseline_select_client_24"
